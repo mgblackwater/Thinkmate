@@ -12,7 +12,11 @@ const translatorCoach = {
     ]
   },
   settings: {
-    target_language: { label: 'Target Language', type: 'text', default: 'Spanish' }
+    target_language: { label: 'Target Language', type: 'select', default: 'English', options: [
+      'English', 'Spanish', 'French', 'German', 'Italian', 'Portuguese',
+      'Chinese', 'Japanese', 'Korean', 'Arabic', 'Hindi', 'Malay',
+      'Thai', 'Vietnamese', 'Indonesian', 'Turkish', 'Russian', 'Dutch'
+    ] }
   }
 };
 export default translatorCoach;
