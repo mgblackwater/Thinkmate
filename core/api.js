@@ -104,7 +104,7 @@ async function callOllama({ baseUrl, model, systemPrompt, userText, sessionMessa
   }
   messages.push({ role: 'user', content: userText });
 
-  const body = { model, messages, stream: false, format: 'json' };
+  const body = { model, messages, stream: false };
 
   const res = await fetch(url, {
     method: 'POST',

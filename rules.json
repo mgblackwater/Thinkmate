@@ -7,13 +7,14 @@
       "requestHeaders": [
         {
           "header": "Origin",
-          "operation": "remove"
+          "operation": "set",
+          "value": "http://localhost:11434"
         }
       ]
     },
     "condition": {
-      "urlFilter": "||localhost",
-      "resourceTypes": ["xmlhttprequest", "other"]
+      "urlFilter": "||localhost:11434",
+      "resourceTypes": ["xmlhttprequest", "other", "main_frame", "sub_frame"]
     }
   }
 ]
