@@ -99,15 +99,14 @@
     }
   });
 
-  // Hook trigger click to grab text + caret position from active element
+  // Hook trigger click to grab text from active or last-known element
   function openPanel() {
-    const el = detector.activeElement;
+    const el = detector.activeElement || panel.sourceElement;
     const text = el ? detector.getText(el) : '';
-    const caretRect = el ? detector.getCaretRect(el) : null;
     if (panel.isVisible) {
       panel.hide();
     } else {
-      panel.show(el, text, caretRect);
+      panel.show(el, text);
     }
   }
   panel._onTriggerClick = openPanel;

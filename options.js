@@ -17,6 +17,7 @@ const openrouterModel = document.getElementById('openrouter-model');
 const ollamaUrl = document.getElementById('ollama-url');
 const ollamaModel = document.getElementById('ollama-model');
 const panelPosition = document.getElementById('panel-position');
+const themeSelect = document.getElementById('theme');
 const coachList = document.getElementById('coach-list');
 const statusMsg = document.getElementById('status-msg');
 
@@ -34,10 +35,10 @@ const profileFields = {
 
 // Sync DOM references
 const syncStatusEl = document.getElementById('sync-status');
-const syncSignedOut = document.getElementById('sync-signed-out');
-const syncSignedIn = document.getElementById('sync-signed-in');
+const syncLabel = document.getElementById('sync-label');
 const supabaseUrlInput = document.getElementById('supabase-url');
 const supabaseKeyInput = document.getElementById('supabase-key');
+const syncNowBtn = document.getElementById('btn-sync-now');
 
 let currentSettings = {};
 
@@ -50,6 +51,7 @@ async function init() {
   openrouterKey.value = currentSettings.openrouter_api_key;
   ollamaUrl.value = currentSettings.ollama_base_url;
   panelPosition.value = currentSettings.panel_position;
+  themeSelect.value = currentSettings.theme || 'light';
 
   showProviderFields(currentSettings.provider);
   loadModels(currentSettings.provider);
@@ -161,6 +163,7 @@ ollamaUrl.addEventListener('change', () => {
 });
 ollamaModel.addEventListener('change', () => save({ ollama_model: ollamaModel.value }));
 panelPosition.addEventListener('change', () => save({ panel_position: panelPosition.value }));
+themeSelect.addEventListener('change', () => save({ theme: themeSelect.value }));
 
 // --- Coach List ---
 function renderCoachList() {
@@ -346,6 +349,7 @@ function saveSyncConfig() {
       anon_key: supabaseKeyInput.value
     }
   });
+  loadSyncStatus();
   showStatus();
 }
 
@@ -355,102 +359,25 @@ supabaseKeyInput.addEventListener('change', saveSyncConfig);
 async function loadSyncStatus() {
   try {
     const result = await chrome.runtime.sendMessage({ type: 'sync-status' });
-    updateSyncUI(result);
-  } catch {
-    updateSyncUI({ status: 'not_configured' });
-  }
-}
+    const dot = syncStatusEl.querySelector('.dot');
 
-function updateSyncUI(result) {
-  const dot = syncStatusEl.querySelector('.dot');
-  const label = syncStatusEl.querySelector('.sync-label');
-
-  switch (result.status) {
-    case 'signed_in':
+    if (result.status === 'ready') {
       dot.className = 'dot green';
-      label.innerHTML = `Signed in as <span class="user-email">${escapeHtml(result.user.name || result.user.email)}</span>`;
-      syncSignedOut.style.display = 'none';
-      syncSignedIn.style.display = 'block';
-      break;
-    case 'signed_out':
-      dot.className = 'dot yellow';
-      label.textContent = 'Not signed in — data is local only';
-      syncSignedOut.style.display = 'block';
-      syncSignedIn.style.display = 'none';
-      break;
-    case 'not_configured':
-    default:
+      syncLabel.textContent = 'Connected';
+      syncNowBtn.disabled = false;
+    } else {
       dot.className = 'dot gray';
-      label.textContent = 'Configure Supabase below to enable sync';
-      syncSignedOut.style.display = 'none';
-      syncSignedIn.style.display = 'none';
-      break;
+      syncLabel.textContent = 'Not configured';
+      syncNowBtn.disabled = true;
+    }
+  } catch {
+    syncNowBtn.disabled = true;
   }
 }
 
-document.getElementById('btn-send-otp').addEventListener('click', async (e) => {
-  const btn = e.target;
-  const email = document.getElementById('otp-email').value.trim();
-  if (!email) return alert('Please enter your email.');
-
-  btn.disabled = true;
-  btn.textContent = 'Sending...';
-
-  try {
-    const result = await chrome.runtime.sendMessage({ type: 'sync-send-otp', email });
-    if (result.error) throw new Error(result.error);
-    // Show code input
-    document.getElementById('otp-step-code').style.display = 'flex';
-    document.getElementById('otp-code').focus();
-  } catch (err) {
-    const msg = err.message === 'SUPABASE_NOT_CONFIGURED'
-      ? 'Please configure Supabase URL and key first.'
-      : `Failed to send code: ${err.message}`;
-    alert(msg);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Send Code';
-  }
-});
-
-document.getElementById('btn-verify-otp').addEventListener('click', async (e) => {
-  const btn = e.target;
-  const email = document.getElementById('otp-email').value.trim();
-  const token = document.getElementById('otp-code').value.trim();
-  if (!token) return alert('Please enter the code from your email.');
-
-  btn.disabled = true;
-  btn.textContent = 'Verifying...';
-
-  try {
-    const result = await chrome.runtime.sendMessage({ type: 'sync-verify-otp', email, token });
-    if (result.error) throw new Error(result.error);
-    // Reset OTP UI
-    document.getElementById('otp-step-code').style.display = 'none';
-    document.getElementById('otp-code').value = '';
-    loadSyncStatus();
-    renderInsights();
-    loadProfile();
-    showStatus();
-  } catch (err) {
-    alert(`Verification failed: ${err.message}`);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Verify';
-  }
-});
-
-document.getElementById('btn-sign-out').addEventListener('click', async () => {
-  if (!confirm('Sign out? Your data will remain local on this device.')) return;
-  await chrome.runtime.sendMessage({ type: 'sync-sign-out' });
-  loadSyncStatus();
-  showStatus();
-});
-
-document.getElementById('btn-sync-now').addEventListener('click', async (e) => {
-  const btn = e.target;
-  btn.disabled = true;
-  btn.textContent = 'Syncing...';
+syncNowBtn.addEventListener('click', async () => {
+  syncNowBtn.disabled = true;
+  syncNowBtn.textContent = 'Syncing...';
 
   try {
     const result = await chrome.runtime.sendMessage({ type: 'sync-now' });
@@ -461,8 +388,8 @@ document.getElementById('btn-sync-now').addEventListener('click', async (e) => {
   } catch (err) {
     alert(`Sync failed: ${err.message}`);
   } finally {
-    btn.disabled = false;
-    btn.textContent = 'Sync Now';
+    syncNowBtn.disabled = false;
+    syncNowBtn.textContent = 'Sync Now';
   }
 });
 

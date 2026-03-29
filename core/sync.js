@@ -1,166 +1,49 @@
 // core/sync.js
-// Supabase cross-device sync — REST API client + email OTP auth + sync logic
-// No SDK needed — uses fetch against Supabase REST endpoints
-
-// --- Config ---
+// Supabase cross-device sync — anon key + direct REST, no auth needed
+// User brings their own Supabase project
 
 const SYNC_CONFIG_KEY = 'supabase_config';
-const SESSION_KEY = 'supabase_session';
 
 const CONFIG_DEFAULTS = {
   url: '',
-  anon_key: ''
+  anon_key: '',
+  user_id: ''
 };
 
 export async function getConfig() {
   const data = await chrome.storage.sync.get({ [SYNC_CONFIG_KEY]: CONFIG_DEFAULTS });
-  return data[SYNC_CONFIG_KEY];
+  const config = data[SYNC_CONFIG_KEY];
+
+  // Generate a stable user ID on first use
+  if (config.url && !config.user_id) {
+    config.user_id = crypto.randomUUID();
+    await chrome.storage.sync.set({ [SYNC_CONFIG_KEY]: config });
+  }
+
+  return config;
 }
 
 export async function setConfig(config) {
   await chrome.storage.sync.set({ [SYNC_CONFIG_KEY]: config });
 }
 
-// --- Session (stored in local storage) ---
-
-export async function getSession() {
-  const data = await chrome.storage.local.get({ [SESSION_KEY]: null });
-  return data[SESSION_KEY];
-}
-
-async function saveSession(session) {
-  await chrome.storage.local.set({ [SESSION_KEY]: session });
-}
-
-export async function clearSession() {
-  await chrome.storage.local.remove(SESSION_KEY);
-}
-
-// --- Auth: Email OTP (provider-agnostic, no chrome.identity needed) ---
-
-export async function sendOtp(email) {
-  const config = await getConfig();
-  if (!config.url || !config.anon_key) {
-    throw new Error('SUPABASE_NOT_CONFIGURED');
-  }
-
-  await supabaseFetch(config, '/auth/v1/otp', {
-    method: 'POST',
-    body: JSON.stringify({ email })
-  });
-
-  return { sent: true };
-}
-
-export async function verifyOtp(email, token) {
-  const config = await getConfig();
-  if (!config.url || !config.anon_key) {
-    throw new Error('SUPABASE_NOT_CONFIGURED');
-  }
-
-  const result = await supabaseFetch(config, '/auth/v1/token?grant_type=magiclink', {
-    method: 'POST',
-    body: JSON.stringify({ email, token })
-  });
-
-  if (!result.access_token) {
-    throw new Error('INVALID_OTP');
-  }
-
-  const session = {
-    access_token: result.access_token,
-    refresh_token: result.refresh_token,
-    expires_at: Date.now() + (result.expires_in * 1000),
-    user: {
-      id: result.user.id,
-      email: result.user.email,
-      name: result.user.user_metadata?.full_name || result.user.email
-    }
-  };
-
-  await saveSession(session);
-  return session;
-}
-
-export async function signOut() {
-  const config = await getConfig();
-  const session = await getSession();
-
-  // Revoke token on Supabase (best-effort)
-  if (session?.access_token && config.url) {
-    try {
-      await supabaseFetch(config, '/auth/v1/logout', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${session.access_token}` }
-      });
-    } catch {
-      // Ignore — we clear locally regardless
-    }
-  }
-
-  await clearSession();
-}
-
-// --- Token Refresh ---
-
-async function refreshAccessToken() {
-  const config = await getConfig();
-  const session = await getSession();
-
-  if (!session?.refresh_token || !config.url) return null;
-
-  try {
-    const result = await supabaseFetch(config, '/auth/v1/token?grant_type=refresh_token', {
-      method: 'POST',
-      body: JSON.stringify({ refresh_token: session.refresh_token })
-    });
-
-    const newSession = {
-      access_token: result.access_token,
-      refresh_token: result.refresh_token,
-      expires_at: Date.now() + (result.expires_in * 1000),
-      user: session.user
-    };
-
-    await saveSession(newSession);
-    return newSession;
-  } catch {
-    // Refresh failed — session expired, user needs to sign in again
-    await clearSession();
-    return null;
-  }
-}
-
-async function getValidSession() {
-  let session = await getSession();
-  if (!session) return null;
-
-  // Refresh if token expires within 60 seconds
-  if (session.expires_at - Date.now() < 60000) {
-    session = await refreshAccessToken();
-  }
-
-  return session;
-}
-
-// --- Supabase REST helpers ---
+// --- Supabase REST helper ---
 
 async function supabaseFetch(config, path, options = {}) {
-  const url = `${config.url}${path}`;
-  const headers = {
-    'Content-Type': 'application/json',
-    'apikey': config.anon_key,
-    ...options.headers
-  };
-
-  const res = await fetch(url, { ...options, headers });
+  const res = await fetch(`${config.url}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': config.anon_key,
+      ...options.headers
+    }
+  });
 
   if (!res.ok) {
     const body = await res.text();
     throw new Error(`Supabase ${res.status}: ${body}`);
   }
 
-  // Some endpoints return empty body (e.g. logout)
   const text = await res.text();
   return text ? JSON.parse(text) : {};
 }
@@ -169,23 +52,17 @@ async function supabaseFetch(config, path, options = {}) {
 
 export async function syncToRemote(profile, memory) {
   const config = await getConfig();
-  const session = await getValidSession();
-  if (!session || !config.url) return false;
-
-  const payload = {
-    id: session.user.id,
-    profile,
-    memory,
-    updated_at: new Date().toISOString()
-  };
+  if (!config.url || !config.anon_key) return false;
 
   await supabaseFetch(config, '/rest/v1/user_data', {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${session.access_token}`,
-      Prefer: 'resolution=merge-duplicates'
-    },
-    body: JSON.stringify(payload)
+    headers: { Prefer: 'resolution=merge-duplicates' },
+    body: JSON.stringify({
+      id: config.user_id,
+      profile,
+      memory,
+      updated_at: new Date().toISOString()
+    })
   });
 
   return true;
@@ -193,18 +70,12 @@ export async function syncToRemote(profile, memory) {
 
 export async function syncFromRemote() {
   const config = await getConfig();
-  const session = await getValidSession();
-  if (!session || !config.url) return null;
+  if (!config.url || !config.anon_key) return null;
 
   const result = await supabaseFetch(
     config,
-    `/rest/v1/user_data?id=eq.${session.user.id}&select=profile,memory,updated_at`,
-    {
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-        Accept: 'application/vnd.pgrst.object+json'
-      }
-    }
+    `/rest/v1/user_data?id=eq.${config.user_id}&select=profile,memory,updated_at`,
+    { headers: { Accept: 'application/vnd.pgrst.object+json' } }
   );
 
   return result || null;
@@ -212,15 +83,12 @@ export async function syncFromRemote() {
 
 /**
  * Full sync: pull remote, merge with local, push back.
- * Strategy: last-write-wins per field group (profile vs memory).
- * On first sign-in, local data is pushed up if remote is empty.
+ * On first sync, local data is pushed up if remote is empty.
  */
 export async function performFullSync() {
   const config = await getConfig();
-  const session = await getValidSession();
-  if (!session || !config.url) return { synced: false, reason: 'not_signed_in' };
+  if (!config.url || !config.anon_key) return { synced: false, reason: 'not_configured' };
 
-  // Get local data
   const localProfile = await chrome.storage.sync.get({ user_profile: {} });
   const localMemory = await chrome.storage.local.get({ learned_memory: {} });
   const profile = localProfile.user_profile;
@@ -230,39 +98,33 @@ export async function performFullSync() {
   try {
     remote = await syncFromRemote();
   } catch {
-    // No remote data yet (404 or empty) — push local up
     remote = null;
   }
 
   if (!remote || !remote.updated_at) {
-    // First sync — push local data to remote
     await syncToRemote(profile, memory);
     return { synced: true, direction: 'up' };
   }
 
-  // Merge: remote wins for profile (simpler), merge error patterns for memory
+  // Merge and push back
   const mergedProfile = { ...profile, ...remote.profile };
   const mergedMemory = mergeMemory(memory, remote.memory);
 
-  // Save merged data locally
   await chrome.storage.sync.set({ user_profile: mergedProfile });
   await chrome.storage.local.set({ learned_memory: mergedMemory });
-
-  // Push merged data to remote
   await syncToRemote(mergedProfile, mergedMemory);
 
   return { synced: true, direction: 'merged' };
 }
 
 /**
- * Merge two memory objects. Combines error_patterns (dedup by category+pattern),
- * takes max counts, merges coach/site usage, and unions strong_areas.
+ * Merge two memory objects. Dedup by category+pattern, keep highest counts.
  */
 function mergeMemory(local, remote) {
   if (!remote || Object.keys(remote).length === 0) return local;
   if (!local || Object.keys(local).length === 0) return remote;
 
-  // Merge error_patterns — dedup by category+pattern, keep highest count
+  // Error patterns — dedup by category+pattern, keep highest count
   const patternMap = new Map();
   for (const e of (local.error_patterns || [])) {
     patternMap.set(`${e.category}:${e.pattern}`, e);
@@ -275,32 +137,24 @@ function mergeMemory(local, remote) {
     }
   }
 
-  // Merge strong_areas — dedup by category, keep highest streak
+  // Strong areas — dedup by category, keep highest streak
   const strongMap = new Map();
-  for (const s of (local.strong_areas || [])) {
-    strongMap.set(s.category, s);
-  }
+  for (const s of (local.strong_areas || [])) strongMap.set(s.category, s);
   for (const s of (remote.strong_areas || [])) {
     const existing = strongMap.get(s.category);
-    if (!existing || s.streak > existing.streak) {
-      strongMap.set(s.category, s);
-    }
+    if (!existing || s.streak > existing.streak) strongMap.set(s.category, s);
   }
 
-  // Merge coach_usage — keep highest count per coach
+  // Coach usage — keep highest count per coach
   const coachUsage = { ...(local.coach_usage || {}) };
   for (const [id, data] of Object.entries(remote.coach_usage || {})) {
-    if (!coachUsage[id] || data.count > coachUsage[id].count) {
-      coachUsage[id] = data;
-    }
+    if (!coachUsage[id] || data.count > coachUsage[id].count) coachUsage[id] = data;
   }
 
-  // Merge site_usage — keep highest count per site
+  // Site usage — keep highest count per site
   const siteUsage = { ...(local.site_usage || {}) };
   for (const [site, count] of Object.entries(remote.site_usage || {})) {
-    if (!siteUsage[site] || count > siteUsage[site]) {
-      siteUsage[site] = count;
-    }
+    if (!siteUsage[site] || count > siteUsage[site]) siteUsage[site] = count;
   }
 
   return {
@@ -311,19 +165,10 @@ function mergeMemory(local, remote) {
   };
 }
 
-// --- Status helper ---
+// --- Status ---
 
 export async function getSyncStatus() {
   const config = await getConfig();
-  const session = await getValidSession();
-
-  if (!config.url || !config.anon_key) {
-    return { status: 'not_configured' };
-  }
-
-  if (!session) {
-    return { status: 'signed_out' };
-  }
-
-  return { status: 'signed_in', user: session.user };
+  if (!config.url || !config.anon_key) return { status: 'not_configured' };
+  return { status: 'ready', user_id: config.user_id };
 }

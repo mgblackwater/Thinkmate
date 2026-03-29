@@ -10,8 +10,8 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #f7fafc;
       color: #2d3748;
-      padding: 40px;
-      max-width: 640px;
+      padding: 32px 40px;
+      max-width: 100%;
       margin: 0 auto;
       line-height: 1.5;
     }
@@ -20,12 +20,29 @@
     .header h1 { font-size: 28px; color: #6c63ff; font-weight: 700; letter-spacing: 1px; }
     .header p { color: #a0aec0; font-size: 14px; margin-top: 4px; }
 
+    /* Responsive grid */
+    .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+    .grid > div { display: flex; flex-direction: column; gap: 24px; }
+    .grid > div > .section { flex: 1; }
+    .grid > div > .section:last-child { margin-bottom: 0; }
+    .grid .full-width { grid-column: 1 / -1; }
+    .grid .span-2 { grid-column: span 2; }
+
+    @media (max-width: 1024px) {
+      .grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      body { padding: 16px; }
+      .grid { grid-template-columns: 1fr; }
+      .grid .full-width, .grid .span-2 { grid-column: 1; }
+    }
+
     .section {
       background: #ffffff;
       border: 1px solid #e2e8f0;
       border-radius: 12px;
       padding: 24px;
-      margin-bottom: 24px;
     }
 
     .section h2 { font-size: 16px; font-weight: 600; color: #6c63ff; margin-bottom: 16px; }
@@ -35,7 +52,7 @@
 
     label { display: block; font-size: 13px; color: #718096; margin-bottom: 6px; }
 
-    select, input[type="text"], input[type="password"], textarea {
+    select, input[type="text"], input[type="password"], input[type="email"], textarea {
       width: 100%;
       padding: 10px 12px;
       background: #f7fafc;
@@ -54,6 +71,11 @@
     .help-link { display: inline-block; margin-top: 6px; font-size: 12px; color: #6c63ff; text-decoration: none; }
     .help-link:hover { text-decoration: underline; }
 
+    /* Profile grid */
+    .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+    .profile-grid .full { grid-column: 1 / -1; }
+
+    /* Coach list */
     .coach-list { display: flex; flex-direction: column; gap: 8px; }
 
     .coach-item {
@@ -89,7 +111,7 @@
     .coach-settings.visible { display: block; }
     .coach-settings .field { margin-bottom: 12px; }
 
-    .status-msg { text-align: center; font-size: 13px; color: #6c63ff; padding: 8px; opacity: 0; transition: opacity 0.3s ease; }
+    .status-msg { text-align: center; font-size: 13px; color: #6c63ff; padding: 8px; opacity: 0; transition: opacity 0.3s ease; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #fff; border: 1px solid #6c63ff; border-radius: 8px; z-index: 100; }
     .status-msg.visible { opacity: 1; }
 
     .hidden { display: none; }
@@ -138,10 +160,13 @@
     .subsection { margin-top: 20px; padding-top: 16px; border-top: 1px solid #edf2f7; }
     .subsection h3 { font-size: 13px; font-weight: 600; color: #4a5568; margin-bottom: 10px; }
 
+    .shortcut-hint { font-size: 12px; color: #a0aec0; margin-top: 8px; }
+    .kbd { display: inline-block; background: #edf2f7; border: 1px solid #e2e8f0; border-radius: 4px; padding: 1px 6px; font-size: 11px; font-family: monospace; color: #4a5568; }
+
     /* Sync */
     .sync-status {
       display: flex; align-items: center; gap: 10px;
-      padding: 12px 14px; background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 8px;
+      padding: 10px 14px; background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 8px;
       font-size: 13px; margin-bottom: 16px;
     }
     .sync-status .dot {
@@ -149,28 +174,6 @@
     }
     .sync-status .dot.green { background: #38a169; }
     .sync-status .dot.gray { background: #a0aec0; }
-    .sync-status .dot.yellow { background: #d69e2e; }
-    .sync-status .user-email { color: #4a5568; font-weight: 500; }
-    .sync-status .sync-label { color: #a0aec0; }
-
-    .otp-flow { display: flex; flex-direction: column; gap: 10px; }
-    .otp-row { display: flex; gap: 8px; align-items: center; }
-    .otp-row input { flex: 1; }
-    .otp-row button { flex-shrink: 0; }
-
-    .btn-signout {
-      padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 500;
-      cursor: pointer; border: 1px solid #e2e8f0; background: #edf2f7; color: #718096;
-      transition: all 0.15s ease; margin-left: auto;
-    }
-    .btn-signout:hover { background: #e2e8f0; }
-
-    .sync-config { margin-top: 12px; }
-    .sync-config summary {
-      font-size: 12px; color: #a0aec0; cursor: pointer; user-select: none;
-    }
-    .sync-config summary:hover { color: #718096; }
-    .sync-config .field { margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -179,196 +182,191 @@
     <p>Your thinking partner</p>
   </div>
 
-  <!-- Profile Section -->
-  <div class="section">
-    <h2>Your Profile</h2>
-    <div class="field">
-      <label for="profile-name">Name</label>
-      <input type="text" id="profile-name" placeholder="Your name">
-    </div>
-    <div class="field">
-      <label for="profile-nationality">Nationality</label>
-      <input type="text" id="profile-nationality" placeholder="e.g. Malaysian, Japanese">
-    </div>
-    <div class="field">
-      <label for="profile-language">Native Language</label>
-      <input type="text" id="profile-language" placeholder="e.g. Malay, Japanese, Arabic">
-    </div>
-    <div class="field">
-      <label for="profile-profession">Profession</label>
-      <input type="text" id="profile-profession" placeholder="e.g. Software Engineer, Doctor">
-    </div>
-    <div class="field">
-      <label for="profile-seniority">Seniority</label>
-      <select id="profile-seniority">
-        <option value="">Select...</option>
-        <option value="Junior">Junior</option>
-        <option value="Mid">Mid</option>
-        <option value="Senior">Senior</option>
-        <option value="Lead">Lead</option>
-        <option value="Manager">Manager</option>
-      </select>
-    </div>
-    <div class="field">
-      <label for="profile-goals">Current Goals</label>
-      <textarea id="profile-goals" placeholder="e.g. IELTS 8.0, Canada PR, improve business writing"></textarea>
-    </div>
-    <div class="field">
-      <label for="profile-work">Work Context</label>
-      <textarea id="profile-work" placeholder="e.g. Leading a team of 5, working on healthcare SaaS"></textarea>
-    </div>
-    <div class="field">
-      <label for="profile-style">Communication Style</label>
-      <select id="profile-style">
-        <option value="direct">Direct</option>
-        <option value="formal">Formal</option>
-        <option value="casual">Casual</option>
-      </select>
-    </div>
-  </div>
+  <div class="grid">
 
-  <!-- Sync Section -->
-  <div class="section">
-    <h2>Cloud Sync</h2>
+    <!-- Column 1: Provider + UI Preferences -->
+    <div>
+      <div class="section">
+        <h2>AI Provider</h2>
 
-    <div id="sync-status" class="sync-status">
-      <span class="dot gray"></span>
-      <span class="sync-label">Checking...</span>
-    </div>
-
-    <div id="sync-signed-out" style="display:none;">
-      <p style="font-size:13px; color:#718096; margin-bottom:12px;">
-        Sign in with your email to sync your profile and learned patterns across devices. Your data stays local until you sign in.
-      </p>
-      <div class="otp-flow">
-        <div class="otp-row" id="otp-step-email">
-          <input type="email" id="otp-email" placeholder="your@email.com">
-          <button class="btn" id="btn-send-otp">Send Code</button>
+        <div class="field">
+          <label for="provider">Provider</label>
+          <select id="provider">
+            <option value="gemini">Gemini</option>
+            <option value="openrouter">OpenRouter</option>
+            <option value="ollama">Ollama (Local)</option>
+          </select>
         </div>
-        <div class="otp-row" id="otp-step-code" style="display:none;">
-          <input type="text" id="otp-code" placeholder="Enter 6-digit code" maxlength="6">
-          <button class="btn" id="btn-verify-otp">Verify</button>
+
+        <div id="gemini-fields">
+          <div class="field">
+            <label for="gemini-key">API Key</label>
+            <input type="password" id="gemini-key" placeholder="Enter your Gemini API key">
+            <a class="help-link" href="https://aistudio.google.com/apikey" target="_blank">Get a free API key from Google AI Studio</a>
+          </div>
+          <div class="field">
+            <label for="gemini-model">Model</label>
+            <select id="gemini-model"></select>
+          </div>
+        </div>
+
+        <div id="openrouter-fields" class="hidden">
+          <div class="field">
+            <label for="openrouter-key">API Key</label>
+            <input type="password" id="openrouter-key" placeholder="Enter your OpenRouter API key">
+            <a class="help-link" href="https://openrouter.ai/keys" target="_blank">Get an API key from OpenRouter</a>
+          </div>
+          <div class="field">
+            <label for="openrouter-model">Model</label>
+            <select id="openrouter-model"><option value="">Enter API key to load models...</option></select>
+          </div>
+        </div>
+
+        <div id="ollama-fields" class="hidden">
+          <div class="field">
+            <label for="ollama-url">Base URL</label>
+            <input type="text" id="ollama-url" placeholder="http://localhost:11434">
+          </div>
+          <div class="field">
+            <label for="ollama-model">Model</label>
+            <select id="ollama-model"><option value="">Click to load models...</option></select>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div id="sync-signed-in" style="display:none;">
-      <div style="display:flex; align-items:center; gap:8px;">
-        <button class="btn" id="btn-sync-now">Sync Now</button>
-        <button class="btn-signout" id="btn-sign-out">Sign Out</button>
+      <div class="section">
+        <h2>UI Preferences</h2>
+        <div class="field">
+          <label for="panel-position">Panel Position</label>
+          <select id="panel-position">
+            <option value="cursor">Near Input (default)</option>
+            <option value="anchored">Anchored (near input field)</option>
+            <option value="fixed">Fixed Corner (bottom-right)</option>
+            <option value="toolbar">Toolbar (click extension icon)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="theme">Theme</label>
+          <select id="theme">
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </div>
+        <div class="shortcut-hint">Keyboard shortcut: <span class="kbd">Ctrl</span> + <span class="kbd">Shift</span> + <span class="kbd">Y</span></div>
       </div>
     </div>
 
-    <details class="sync-config">
-      <summary>Supabase Configuration</summary>
-      <div class="field">
-        <label for="supabase-url">Project URL</label>
-        <input type="text" id="supabase-url" placeholder="https://your-project.supabase.co">
-      </div>
-      <div class="field">
-        <label for="supabase-key">Anon Key</label>
-        <input type="password" id="supabase-key" placeholder="Your Supabase anon/public key">
-      </div>
-    </details>
-  </div>
-
-  <!-- Provider Section -->
-  <div class="section">
-    <h2>AI Provider</h2>
-
-    <div class="field">
-      <label for="provider">Provider</label>
-      <select id="provider">
-        <option value="gemini">Gemini</option>
-        <option value="openrouter">OpenRouter</option>
-        <option value="ollama">Ollama (Local)</option>
-      </select>
-    </div>
-
-    <div id="gemini-fields">
-      <div class="field">
-        <label for="gemini-key">API Key</label>
-        <input type="password" id="gemini-key" placeholder="Enter your Gemini API key">
-        <a class="help-link" href="https://aistudio.google.com/apikey" target="_blank">Get a free API key from Google AI Studio</a>
-      </div>
-      <div class="field">
-        <label for="gemini-model">Model</label>
-        <select id="gemini-model"></select>
+    <!-- Column 2: Coaches -->
+    <div>
+      <div class="section">
+        <h2>Coaches</h2>
+        <div id="coach-list" class="coach-list"></div>
       </div>
     </div>
 
-    <div id="openrouter-fields" class="hidden">
-      <div class="field">
-        <label for="openrouter-key">API Key</label>
-        <input type="password" id="openrouter-key" placeholder="Enter your OpenRouter API key">
-        <a class="help-link" href="https://openrouter.ai/keys" target="_blank">Get an API key from OpenRouter</a>
+    <!-- Column 3: Profile + Cloud Sync -->
+    <div>
+      <div class="section">
+        <h2>Your Profile</h2>
+        <p style="font-size:13px; color:#a0aec0; margin-bottom:16px;">This information helps Thinkmate personalize coaching to your background, goals, and communication style. All data stays in your browser.</p>
+        <div class="field">
+          <label for="profile-name">Name</label>
+          <input type="text" id="profile-name" placeholder="How should coaches address you?">
+        </div>
+        <div class="field">
+          <label for="profile-nationality">Nationality</label>
+          <input type="text" id="profile-nationality" placeholder="Your country or region">
+        </div>
+        <div class="field">
+          <label for="profile-language">Native Language</label>
+          <input type="text" id="profile-language" placeholder="Your first language">
+        </div>
+        <div class="field">
+          <label for="profile-profession">Profession</label>
+          <input type="text" id="profile-profession" placeholder="Your role or field">
+        </div>
+        <div class="field">
+          <label for="profile-seniority">Seniority</label>
+          <select id="profile-seniority">
+            <option value="">Select...</option>
+            <option value="Junior">Junior</option>
+            <option value="Mid">Mid</option>
+            <option value="Senior">Senior</option>
+            <option value="Lead">Lead</option>
+            <option value="Manager">Manager</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="profile-style">Communication Style</label>
+          <select id="profile-style">
+            <option value="direct">Direct</option>
+            <option value="formal">Formal</option>
+            <option value="casual">Casual</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="profile-goals">Goals</label>
+          <textarea id="profile-goals" placeholder="What are you working towards?"></textarea>
+        </div>
+        <div class="field">
+          <label for="profile-work">Work Context</label>
+          <textarea id="profile-work" placeholder="Describe your work environment"></textarea>
+        </div>
       </div>
-      <div class="field">
-        <label for="openrouter-model">Model</label>
-        <select id="openrouter-model"><option value="">Enter API key to load models...</option></select>
+
+      <div class="section">
+        <h2>Cloud Sync</h2>
+        <p style="font-size:13px; color:#a0aec0; margin-bottom:16px;">Connect your own Supabase project to sync profile and learned patterns across devices.</p>
+
+        <div id="sync-status" class="sync-status">
+          <span class="dot gray"></span>
+          <span id="sync-label">Not configured</span>
+        </div>
+
+        <div class="field">
+          <label for="supabase-url">Supabase Project URL</label>
+          <input type="text" id="supabase-url" placeholder="https://your-project.supabase.co">
+        </div>
+        <div class="field">
+          <label for="supabase-key">Anon Key</label>
+          <input type="password" id="supabase-key" placeholder="Your Supabase anon/public key">
+        </div>
+
+        <div class="btn-row">
+          <button class="btn" id="btn-sync-now" disabled>Sync Now</button>
+        </div>
       </div>
     </div>
 
-    <div id="ollama-fields" class="hidden">
-      <div class="field">
-        <label for="ollama-url">Base URL</label>
-        <input type="text" id="ollama-url" placeholder="http://localhost:11434">
+    <!-- Full width: Insights -->
+    <div class="section full-width">
+      <h2>Insights</h2>
+
+      <div class="grid" style="gap:16px;">
+        <div>
+          <h3 style="font-size:13px;font-weight:600;color:#4a5568;margin-bottom:10px;">Weak Areas</h3>
+          <div id="insights-errors" class="insight-list"></div>
+        </div>
+        <div>
+          <h3 style="font-size:13px;font-weight:600;color:#4a5568;margin-bottom:10px;">Strong Areas</h3>
+          <div id="insights-strong"></div>
+          <div style="margin-top:20px;">
+            <h3 style="font-size:13px;font-weight:600;color:#4a5568;margin-bottom:10px;">Most Used Coaches</h3>
+            <div id="insights-coaches"></div>
+          </div>
+        </div>
+        <div>
+          <h3 style="font-size:13px;font-weight:600;color:#4a5568;margin-bottom:10px;">Most Used Sites</h3>
+          <div id="insights-sites"></div>
+        </div>
       </div>
-      <div class="field">
-        <label for="ollama-model">Model</label>
-        <select id="ollama-model"><option value="">Click to load models...</option></select>
+
+      <div class="btn-row">
+        <button class="btn" id="btn-export">Export Data as JSON</button>
+        <button class="btn btn-danger" id="btn-clear">Clear All Memory</button>
       </div>
     </div>
-  </div>
 
-  <!-- UI Preferences -->
-  <div class="section">
-    <h2>UI Preferences</h2>
-    <div class="field">
-      <label for="panel-position">Panel Position</label>
-      <select id="panel-position">
-        <option value="cursor">Near Cursor (default)</option>
-        <option value="anchored">Anchored (near input field)</option>
-        <option value="fixed">Fixed Corner (bottom-right)</option>
-        <option value="toolbar">Toolbar (click extension icon)</option>
-      </select>
-    </div>
-  </div>
-
-  <!-- Coaches -->
-  <div class="section">
-    <h2>Coaches</h2>
-    <div id="coach-list" class="coach-list"></div>
-  </div>
-
-  <!-- Insights -->
-  <div class="section">
-    <h2>Insights</h2>
-
-    <div class="subsection" style="margin-top:0; padding-top:0; border-top:none;">
-      <h3>Weak Areas</h3>
-      <div id="insights-errors" class="insight-list"></div>
-    </div>
-
-    <div class="subsection">
-      <h3>Strong Areas</h3>
-      <div id="insights-strong"></div>
-    </div>
-
-    <div class="subsection">
-      <h3>Most Used Coaches</h3>
-      <div id="insights-coaches"></div>
-    </div>
-
-    <div class="subsection">
-      <h3>Most Used Sites</h3>
-      <div id="insights-sites"></div>
-    </div>
-
-    <div class="btn-row">
-      <button class="btn" id="btn-export">Export Data as JSON</button>
-      <button class="btn btn-danger" id="btn-clear">Clear All Memory</button>
-    </div>
   </div>
 
   <div class="status-msg" id="status-msg">Settings saved</div>

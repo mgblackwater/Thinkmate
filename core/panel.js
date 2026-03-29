@@ -51,10 +51,10 @@ export class Panel {
   showTrigger(elRect) {
     if (this.panelPosition === 'toolbar') return;
 
-    // Position at top-right corner of the input field
+    // Position just outside the top-right corner of the input field
     this.trigger.style.display = 'flex';
     this.trigger.style.top = `${elRect.top + window.scrollY - 40}px`;
-    this.trigger.style.left = `${elRect.right + window.scrollX - 36}px`;
+    this.trigger.style.left = `${elRect.right + window.scrollX + 8}px`;
 
     // Keep within viewport
     const triggerBounds = this.trigger.getBoundingClientRect();
@@ -156,16 +156,32 @@ export class Panel {
       this.panel.style.top = 'auto';
       this.panel.style.left = 'auto';
     } else {
-      // Anchored / cursor — position below the trigger button
-      const triggerRect = this.trigger.getBoundingClientRect();
-      let top = triggerRect.bottom + 8;
-      let left = triggerRect.right - panelWidth;
+      // Position relative to the source input element
+      const sourceRect = this.sourceElement?.getBoundingClientRect();
+      const anchor = sourceRect || this.trigger.getBoundingClientRect();
+
+      // Try to place above the input if not enough space below
+      const spaceBelow = window.innerHeight - anchor.bottom;
+      const spaceAbove = anchor.top;
+
+      let top, left;
+
+      if (spaceBelow >= panelMaxHeight || spaceBelow >= spaceAbove) {
+        // Place below the input
+        top = anchor.bottom + 4;
+      } else {
+        // Place above the input
+        top = anchor.top - panelMaxHeight - 4;
+      }
+
+      // Align right edge with input right edge
+      left = anchor.right - panelWidth;
 
       // Keep in viewport
       if (left < 8) left = 8;
       if (left + panelWidth > window.innerWidth) left = window.innerWidth - panelWidth - 8;
-      if (top + panelMaxHeight > window.innerHeight) top = triggerRect.top - panelMaxHeight - 8;
       if (top < 8) top = 8;
+      if (top + panelMaxHeight > window.innerHeight) top = window.innerHeight - panelMaxHeight - 8;
 
       this.panel.style.top = `${top}px`;
       this.panel.style.left = `${left}px`;

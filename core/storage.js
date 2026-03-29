@@ -10,6 +10,7 @@ const DEFAULTS = {
   ollama_base_url: 'http://localhost:11434',
   ollama_model: '',
   panel_position: 'cursor',
+  theme: 'light',
   coaches_enabled: { 'english-coach': true },
   coach_settings: {
     'english-coach': {
