@@ -71,25 +71,60 @@ export class Detector {
 
     if (el.isContentEditable) {
       el.focus();
-      // Use execCommand for undo support where available
+
+      // Select all existing content
       const selection = window.getSelection();
       const range = document.createRange();
       range.selectNodeContents(el);
       selection.removeAllRanges();
       selection.addRange(range);
 
+      // Try execCommand first (best undo support)
       if (document.execCommand('insertText', false, text)) {
+        this._dispatchInputEvents(el);
         return;
       }
-      // Fallback
-      el.textContent = text;
+
+      // Fallback: use DataTransfer to simulate paste (works on WhatsApp, Gmail, etc.)
+      try {
+        const dt = new DataTransfer();
+        dt.setData('text/plain', text);
+        const pasteEvent = new ClipboardEvent('paste', {
+          clipboardData: dt,
+          bubbles: true,
+          cancelable: true
+        });
+        el.dispatchEvent(pasteEvent);
+
+        // If paste was not handled by the app, fall back to direct manipulation
+        if (!pasteEvent.defaultPrevented) {
+          el.textContent = text;
+        }
+      } catch {
+        // Last resort: direct text replacement
+        el.textContent = text;
+      }
+
+      this._dispatchInputEvents(el);
     } else {
       el.focus();
-      el.value = text;
-    }
 
-    // Dispatch events so frameworks pick up the change
-    el.dispatchEvent(new Event('input', { bubbles: true }));
+      // Use native setter to bypass React/framework wrappers
+      const nativeSetter = Object.getOwnPropertyDescriptor(
+        Object.getPrototypeOf(el), 'value'
+      )?.set;
+      if (nativeSetter) {
+        nativeSetter.call(el, text);
+      } else {
+        el.value = text;
+      }
+
+      this._dispatchInputEvents(el);
+    }
+  }
+
+  _dispatchInputEvents(el) {
+    el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText' }));
     el.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
