@@ -3,7 +3,7 @@
   "name": "Thinkmate",
   "version": "1.0.0",
   "description": "Your thinking partner — AI coaching layer for any website",
-  "permissions": ["storage", "activeTab"],
+  "permissions": ["storage", "activeTab", "declarativeNetRequest"],
   "commands": {
     "toggle-panel": {
       "suggested_key": {
@@ -19,6 +19,15 @@
     "http://localhost/*",
     "https://*.supabase.co/*"
   ],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "ollama_cors",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  },
   "background": {
     "service_worker": "background.js",
     "type": "module"
