@@ -92,8 +92,12 @@ export class Detector {
     if (el.isContentEditable) {
       el.focus();
 
-      // Use Ctrl+A equivalent to select all content
-      document.execCommand('selectAll', false, null);
+      // Select all content within this element only
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      selection.removeAllRanges();
+      selection.addRange(range);
 
       // insertText replaces the current selection
       document.execCommand('insertText', false, text);

@@ -552,39 +552,22 @@ export class Panel {
       return;
     }
 
-    const el = this.sourceElement;
+    if (!this.sourceElement) {
+      navigator.clipboard.writeText(text).then(() => {
+        this._showToast('Copied to clipboard');
+      });
+      return;
+    }
 
-    // Copy to clipboard first (always works as backup)
-    navigator.clipboard.writeText(text).catch(() => {});
-
-    // Hide panel to release focus back to page
-    this.hide();
-
-    // Try to apply directly, with fallback
-    setTimeout(() => {
-      try {
-        // Try the stored element first
-        if (el && el.isConnected) {
-          el.focus();
-          this.onApply(el, text);
-          this._showToast('Applied!');
-          return;
-        }
-
-        // Fallback: find the active contenteditable or input
-        const active = document.activeElement;
-        if (active && (active.isContentEditable || active.tagName === 'TEXTAREA' || active.tagName === 'INPUT')) {
-          this.onApply(active, text);
-          this._showToast('Applied!');
-          return;
-        }
-
-        this._showToast('Copied to clipboard — paste with Ctrl+V');
-      } catch (err) {
-        console.error('[Thinkmate] Apply failed:', err);
-        this._showToast('Copied to clipboard — paste with Ctrl+V');
-      }
-    }, 200);
+    try {
+      this.onApply(this.sourceElement, text);
+      this._showToast('Applied!');
+    } catch (err) {
+      console.error('[Thinkmate] Apply failed:', err);
+      navigator.clipboard.writeText(text).then(() => {
+        this._showToast('Copied to clipboard instead');
+      });
+    }
   }
 
   _showToast(message) {
