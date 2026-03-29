@@ -7,17 +7,17 @@
   "commands": {
     "toggle-panel": {
       "suggested_key": {
-        "default": "Ctrl+Shift+Y",
-        "mac": "Command+Shift+Y"
+        "default": "Alt+Shift+T",
+        "mac": "Alt+Shift+T"
       },
       "description": "Open/close Thinkmate panel"
     },
     "quick-correct": {
       "suggested_key": {
-        "default": "Ctrl+Shift+E",
-        "mac": "Command+Shift+E"
+        "default": "Alt+Shift+C",
+        "mac": "Alt+Shift+C"
       },
-      "description": "Quick-correct text in active input (English Coach)"
+      "description": "Quick-correct text in active input"
     }
   },
   "host_permissions": [
