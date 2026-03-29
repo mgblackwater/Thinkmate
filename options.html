@@ -76,7 +76,7 @@
     .profile-grid .full { grid-column: 1 / -1; }
 
     /* Coach list */
-    .coach-list { display: flex; flex-direction: column; gap: 8px; }
+    .coach-list { display: flex; flex-direction: column; gap: 8px; max-height: 480px; overflow-y: auto; }
 
     .coach-item {
       display: flex; align-items: center; justify-content: space-between;
@@ -233,6 +233,13 @@
             <option value="toolbar">Toolbar (click extension icon)</option>
           </select>
         </div>
+        <div class="field">
+          <label for="theme">Theme</label>
+          <select id="theme">
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </div>
         <div class="shortcut-hint">Keyboard shortcut: <span class="kbd">Ctrl</span> + <span class="kbd">Shift</span> + <span class="kbd">Y</span></div>
       </div>
     </div>
@@ -249,21 +256,22 @@
     <div>
       <div class="section">
         <h2>Your Profile</h2>
+        <p style="font-size:13px; color:#a0aec0; margin-bottom:16px;">This information helps Thinkmate personalize coaching to your background, goals, and communication style. All data stays in your browser.</p>
         <div class="field">
           <label for="profile-name">Name</label>
-          <input type="text" id="profile-name" placeholder="Your name">
+          <input type="text" id="profile-name" placeholder="How should coaches address you?">
         </div>
         <div class="field">
           <label for="profile-nationality">Nationality</label>
-          <input type="text" id="profile-nationality" placeholder="e.g. Malaysian">
+          <input type="text" id="profile-nationality" placeholder="Your country or region">
         </div>
         <div class="field">
           <label for="profile-language">Native Language</label>
-          <input type="text" id="profile-language" placeholder="e.g. Malay">
+          <input type="text" id="profile-language" placeholder="Your first language">
         </div>
         <div class="field">
           <label for="profile-profession">Profession</label>
-          <input type="text" id="profile-profession" placeholder="e.g. Software Engineer">
+          <input type="text" id="profile-profession" placeholder="Your role or field">
         </div>
         <div class="field">
           <label for="profile-seniority">Seniority</label>
@@ -286,11 +294,11 @@
         </div>
         <div class="field">
           <label for="profile-goals">Goals</label>
-          <textarea id="profile-goals" placeholder="e.g. IELTS 8.0, Canada PR"></textarea>
+          <textarea id="profile-goals" placeholder="What are you working towards?"></textarea>
         </div>
         <div class="field">
           <label for="profile-work">Work Context</label>
-          <textarea id="profile-work" placeholder="e.g. Leading a team of 5"></textarea>
+          <textarea id="profile-work" placeholder="Describe your work environment"></textarea>
         </div>
       </div>
     </div>

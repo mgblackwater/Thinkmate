@@ -17,6 +17,7 @@ const openrouterModel = document.getElementById('openrouter-model');
 const ollamaUrl = document.getElementById('ollama-url');
 const ollamaModel = document.getElementById('ollama-model');
 const panelPosition = document.getElementById('panel-position');
+const themeSelect = document.getElementById('theme');
 const coachList = document.getElementById('coach-list');
 const statusMsg = document.getElementById('status-msg');
 
@@ -43,6 +44,7 @@ async function init() {
   openrouterKey.value = currentSettings.openrouter_api_key;
   ollamaUrl.value = currentSettings.ollama_base_url;
   panelPosition.value = currentSettings.panel_position;
+  themeSelect.value = currentSettings.theme || 'light';
 
   showProviderFields(currentSettings.provider);
   loadModels(currentSettings.provider);
@@ -152,6 +154,7 @@ ollamaUrl.addEventListener('change', () => {
 });
 ollamaModel.addEventListener('change', () => save({ ollama_model: ollamaModel.value }));
 panelPosition.addEventListener('change', () => save({ panel_position: panelPosition.value }));
+themeSelect.addEventListener('change', () => save({ theme: themeSelect.value }));
 
 // --- Coach List ---
 function renderCoachList() {
