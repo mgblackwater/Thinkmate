@@ -48,26 +48,21 @@ export class Panel {
     this.shadow.appendChild(this.trigger);
   }
 
-  showTrigger(elRect, caretRect) {
+  showTrigger(elRect) {
     if (this.panelPosition === 'toolbar') return;
 
-    // In cursor mode, position near the caret; otherwise near the input field
-    const rect = (this.panelPosition === 'cursor' && caretRect) ? caretRect : elRect;
-
-    // Store caretRect for panel positioning later
-    this.caretRect = caretRect || elRect;
-
+    // Position at top-right corner of the input field
     this.trigger.style.display = 'flex';
-    this.trigger.style.top = `${rect.bottom + window.scrollY + 4}px`;
-    this.trigger.style.left = `${rect.left + window.scrollX}px`;
+    this.trigger.style.top = `${elRect.top + window.scrollY - 40}px`;
+    this.trigger.style.left = `${elRect.right + window.scrollX - 36}px`;
 
     // Keep within viewport
     const triggerBounds = this.trigger.getBoundingClientRect();
     if (triggerBounds.right > window.innerWidth) {
       this.trigger.style.left = `${window.innerWidth - 44}px`;
     }
-    if (triggerBounds.bottom > window.innerHeight) {
-      this.trigger.style.top = `${rect.top + window.scrollY - 40}px`;
+    if (triggerBounds.top < 0) {
+      this.trigger.style.top = `${elRect.bottom + window.scrollY + 4}px`;
     }
   }
 
@@ -160,31 +155,17 @@ export class Panel {
       this.panel.style.right = '20px';
       this.panel.style.top = 'auto';
       this.panel.style.left = 'auto';
-    } else if (this.panelPosition === 'cursor' && this.caretRect) {
-      // Position near cursor/caret
-      let top = this.caretRect.bottom + 8;
-      let left = this.caretRect.left;
-
-      // Keep in viewport
-      if (left < 8) left = 8;
-      if (left + panelWidth > window.innerWidth) left = window.innerWidth - panelWidth - 8;
-      if (top + panelMaxHeight > window.innerHeight) top = this.caretRect.top - panelMaxHeight - 8;
-      if (top < 8) top = 8;
-
-      this.panel.style.top = `${top}px`;
-      this.panel.style.left = `${left}px`;
-      this.panel.style.bottom = 'auto';
-      this.panel.style.right = 'auto';
     } else {
-      // Anchored near trigger
+      // Anchored / cursor — position below the trigger button
       const triggerRect = this.trigger.getBoundingClientRect();
       let top = triggerRect.bottom + 8;
-      let left = triggerRect.left - 200;
+      let left = triggerRect.right - panelWidth;
 
       // Keep in viewport
       if (left < 8) left = 8;
       if (left + panelWidth > window.innerWidth) left = window.innerWidth - panelWidth - 8;
       if (top + panelMaxHeight > window.innerHeight) top = triggerRect.top - panelMaxHeight - 8;
+      if (top < 8) top = 8;
 
       this.panel.style.top = `${top}px`;
       this.panel.style.left = `${left}px`;
