@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Thinkmate — Settings</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f0f23;
+      color: #e0e0e0;
+      padding: 40px;
+      max-width: 640px;
+      margin: 0 auto;
+      line-height: 1.5;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      color: #00d4aa;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .header p {
+      color: #888;
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    .section {
+      background: #1a1a2e;
+      border: 1px solid #2a2a4a;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .section h2 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #00d4aa;
+      margin-bottom: 16px;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field:last-child {
+      margin-bottom: 0;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: #aaa;
+      margin-bottom: 6px;
+    }
+
+    select, input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 10px 12px;
+      background: #0f0f23;
+      border: 1px solid #2a2a4a;
+      border-radius: 8px;
+      color: #e0e0e0;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    select:focus, input:focus {
+      border-color: #00d4aa;
+    }
+
+    .help-link {
+      display: inline-block;
+      margin-top: 6px;
+      font-size: 12px;
+      color: #00d4aa;
+      text-decoration: none;
+    }
+
+    .help-link:hover {
+      text-decoration: underline;
+    }
+
+    .coach-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .coach-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: #0f0f23;
+      border: 1px solid #2a2a4a;
+      border-radius: 8px;
+    }
+
+    .coach-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .coach-icon {
+      font-size: 20px;
+    }
+
+    .coach-name {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .coach-desc {
+      font-size: 11px;
+      color: #888;
+    }
+
+    .toggle {
+      position: relative;
+      width: 40px;
+      height: 22px;
+    }
+
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #2a2a4a;
+      border-radius: 22px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      left: 3px;
+      bottom: 3px;
+      background: #888;
+      border-radius: 50%;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .toggle input:checked + .toggle-slider {
+      background: rgba(0, 212, 170, 0.3);
+    }
+
+    .toggle input:checked + .toggle-slider::before {
+      transform: translateX(18px);
+      background: #00d4aa;
+    }
+
+    .coach-settings {
+      padding: 12px;
+      margin-top: 8px;
+      background: #0f0f23;
+      border: 1px solid #2a2a4a;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .coach-settings.visible {
+      display: block;
+    }
+
+    .coach-settings .field {
+      margin-bottom: 12px;
+    }
+
+    .status-msg {
+      text-align: center;
+      font-size: 13px;
+      color: #00d4aa;
+      padding: 8px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .status-msg.visible {
+      opacity: 1;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Thinkmate</h1>
+    <p>Your thinking partner</p>
+  </div>
+
+  <!-- Provider Section -->
+  <div class="section">
+    <h2>AI Provider</h2>
+
+    <div class="field">
+      <label for="provider">Provider</label>
+      <select id="provider">
+        <option value="gemini">Gemini</option>
+        <option value="openrouter">OpenRouter</option>
+        <option value="ollama">Ollama (Local)</option>
+      </select>
+    </div>
+
+    <!-- Gemini fields -->
+    <div id="gemini-fields">
+      <div class="field">
+        <label for="gemini-key">API Key</label>
+        <input type="password" id="gemini-key" placeholder="Enter your Gemini API key">
+        <a class="help-link" href="https://aistudio.google.com/apikey" target="_blank">Get a free API key from Google AI Studio</a>
+      </div>
+      <div class="field">
+        <label for="gemini-model">Model</label>
+        <select id="gemini-model"></select>
+      </div>
+    </div>
+
+    <!-- OpenRouter fields -->
+    <div id="openrouter-fields" class="hidden">
+      <div class="field">
+        <label for="openrouter-key">API Key</label>
+        <input type="password" id="openrouter-key" placeholder="Enter your OpenRouter API key">
+        <a class="help-link" href="https://openrouter.ai/keys" target="_blank">Get an API key from OpenRouter</a>
+      </div>
+      <div class="field">
+        <label for="openrouter-model">Model</label>
+        <select id="openrouter-model">
+          <option value="">Enter API key to load models...</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Ollama fields -->
+    <div id="ollama-fields" class="hidden">
+      <div class="field">
+        <label for="ollama-url">Base URL</label>
+        <input type="text" id="ollama-url" placeholder="http://localhost:11434">
+      </div>
+      <div class="field">
+        <label for="ollama-model">Model</label>
+        <select id="ollama-model">
+          <option value="">Click to load models...</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- UI Preferences -->
+  <div class="section">
+    <h2>UI Preferences</h2>
+    <div class="field">
+      <label for="panel-position">Panel Position</label>
+      <select id="panel-position">
+        <option value="anchored">Anchored (near input field)</option>
+        <option value="fixed">Fixed Corner (bottom-right)</option>
+        <option value="toolbar">Toolbar (click extension icon)</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Coaches -->
+  <div class="section">
+    <h2>Coaches</h2>
+    <div id="coach-list" class="coach-list"></div>
+  </div>
+
+  <div class="status-msg" id="status-msg">Settings saved</div>
+
+  <script src="options.js" type="module"></script>
+</body>
+</html>
