@@ -99,30 +99,25 @@ export class Detector {
       selection.removeAllRanges();
       selection.addRange(range);
 
-      // Try execCommand first (best undo support)
-      if (document.execCommand('insertText', false, text)) {
-        this._dispatchInputEvents(el);
-        return;
-      }
+      // Delete existing content first
+      document.execCommand('delete', false, null);
 
-      // Fallback: use DataTransfer to simulate paste (works on WhatsApp, Gmail, etc.)
-      try {
-        const dt = new DataTransfer();
-        dt.setData('text/plain', text);
-        const pasteEvent = new ClipboardEvent('paste', {
-          clipboardData: dt,
-          bubbles: true,
-          cancelable: true
-        });
-        el.dispatchEvent(pasteEvent);
+      // Method 1: InputEvent with insertText (works on WhatsApp/React apps)
+      const inputEvent = new InputEvent('beforeinput', {
+        inputType: 'insertText',
+        data: text,
+        bubbles: true,
+        cancelable: true,
+        composed: true
+      });
+      const handled = !el.dispatchEvent(inputEvent);
 
-        // If paste was not handled by the app, fall back to direct manipulation
-        if (!pasteEvent.defaultPrevented) {
+      if (!handled) {
+        // Method 2: execCommand
+        if (!document.execCommand('insertText', false, text)) {
+          // Method 3: direct DOM manipulation
           el.textContent = text;
         }
-      } catch {
-        // Last resort: direct text replacement
-        el.textContent = text;
       }
 
       this._dispatchInputEvents(el);
