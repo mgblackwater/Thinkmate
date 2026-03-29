@@ -245,7 +245,9 @@ export class Panel {
       this.resultData = result;
       this._renderResult(coach, result);
     } catch (err) {
-      if (err.message === 'NO_API_KEY') {
+      console.error('[Thinkmate] Analysis error:', err);
+      const msg = err?.message || String(err) || 'Unknown error';
+      if (msg === 'NO_API_KEY' || msg === 'NO_MODEL') {
         resultArea.innerHTML = `
           <div class="tm-setup-card">
             <p>Configure your AI provider to get started</p>
@@ -254,8 +256,10 @@ export class Panel {
       } else {
         resultArea.innerHTML = `
           <div class="tm-error">
-            ${this._escapeHtml(err.message)}
-            <br><button class="tm-error-retry" data-action="retry">Retry</button>
+            <div class="tm-error-title">Something went wrong</div>
+            <div class="tm-error-detail">${this._escapeHtml(msg)}</div>
+            <button class="tm-error-retry" data-action="retry">Retry</button>
+            <button class="tm-error-retry" data-action="open-options" style="margin-left:6px;">Settings</button>
           </div>`;
       }
     } finally {
