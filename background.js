@@ -3,6 +3,7 @@
 
 import { callProvider, fetchModels } from './core/api.js';
 import * as storage from './core/storage.js';
+import * as sync from './core/sync.js';
 
 // Handle messages from content script and options page
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -23,6 +24,16 @@ async function handleMessage(message) {
     case 'open-options':
       chrome.runtime.openOptionsPage();
       return { ok: true };
+    case 'sync-sign-in':
+      return handleSyncSignIn();
+    case 'sync-sign-out':
+      return handleSyncSignOut();
+    case 'sync-status':
+      return sync.getSyncStatus();
+    case 'sync-now':
+      return handleSyncNow();
+    case 'sync-push':
+      return handleSyncPush(message);
     default:
       throw new Error(`Unknown message type: ${message.type}`);
   }
@@ -110,6 +121,30 @@ async function handleCheckProvider() {
   }
 
   return { provider, configured };
+}
+
+// --- Sync handlers ---
+
+async function handleSyncSignIn() {
+  const session = await sync.signInWithGoogle();
+  // After sign-in, do a full sync to merge local + remote data
+  const result = await sync.performFullSync();
+  return { ok: true, user: session.user, sync: result };
+}
+
+async function handleSyncSignOut() {
+  await sync.signOut();
+  return { ok: true };
+}
+
+async function handleSyncNow() {
+  const result = await sync.performFullSync();
+  return result;
+}
+
+async function handleSyncPush({ profile, memory }) {
+  const pushed = await sync.syncToRemote(profile, memory);
+  return { ok: pushed };
 }
 
 // Handle toolbar icon click — send message to active tab to toggle panel

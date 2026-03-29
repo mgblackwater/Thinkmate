@@ -32,6 +32,13 @@ const profileFields = {
   communication_style: document.getElementById('profile-style')
 };
 
+// Sync DOM references
+const syncStatusEl = document.getElementById('sync-status');
+const syncSignedOut = document.getElementById('sync-signed-out');
+const syncSignedIn = document.getElementById('sync-signed-in');
+const supabaseUrlInput = document.getElementById('supabase-url');
+const supabaseKeyInput = document.getElementById('supabase-key');
+
 let currentSettings = {};
 
 // --- Initialize ---
@@ -49,6 +56,8 @@ async function init() {
   renderCoachList();
   loadProfile();
   renderInsights();
+  loadSyncStatus();
+  loadSyncConfig();
 }
 
 // --- Profile ---
@@ -319,6 +328,114 @@ function escapeHtml(str) {
   div.textContent = str;
   return div.innerHTML;
 }
+
+// --- Sync ---
+
+async function loadSyncConfig() {
+  const data = await chrome.storage.sync.get({
+    supabase_config: { url: '', anon_key: '' }
+  });
+  supabaseUrlInput.value = data.supabase_config.url || '';
+  supabaseKeyInput.value = data.supabase_config.anon_key || '';
+}
+
+function saveSyncConfig() {
+  chrome.storage.sync.set({
+    supabase_config: {
+      url: supabaseUrlInput.value.replace(/\/$/, ''),
+      anon_key: supabaseKeyInput.value
+    }
+  });
+  showStatus();
+}
+
+supabaseUrlInput.addEventListener('change', saveSyncConfig);
+supabaseKeyInput.addEventListener('change', saveSyncConfig);
+
+async function loadSyncStatus() {
+  try {
+    const result = await chrome.runtime.sendMessage({ type: 'sync-status' });
+    updateSyncUI(result);
+  } catch {
+    updateSyncUI({ status: 'not_configured' });
+  }
+}
+
+function updateSyncUI(result) {
+  const dot = syncStatusEl.querySelector('.dot');
+  const label = syncStatusEl.querySelector('.sync-label');
+
+  switch (result.status) {
+    case 'signed_in':
+      dot.className = 'dot green';
+      label.innerHTML = `Signed in as <span class="user-email">${escapeHtml(result.user.name || result.user.email)}</span>`;
+      syncSignedOut.style.display = 'none';
+      syncSignedIn.style.display = 'block';
+      break;
+    case 'signed_out':
+      dot.className = 'dot yellow';
+      label.textContent = 'Not signed in — data is local only';
+      syncSignedOut.style.display = 'block';
+      syncSignedIn.style.display = 'none';
+      break;
+    case 'not_configured':
+    default:
+      dot.className = 'dot gray';
+      label.textContent = 'Configure Supabase below to enable sync';
+      syncSignedOut.style.display = 'none';
+      syncSignedIn.style.display = 'none';
+      break;
+  }
+}
+
+document.getElementById('btn-sign-in').addEventListener('click', async (e) => {
+  const btn = e.target.closest('button');
+  btn.disabled = true;
+  btn.textContent = 'Signing in...';
+
+  try {
+    const result = await chrome.runtime.sendMessage({ type: 'sync-sign-in' });
+    if (result.error) throw new Error(result.error);
+    loadSyncStatus();
+    renderInsights();
+    loadProfile();
+    showStatus();
+  } catch (err) {
+    const msg = err.message === 'SUPABASE_NOT_CONFIGURED'
+      ? 'Please configure Supabase URL and key first.'
+      : `Sign-in failed: ${err.message}`;
+    alert(msg);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#34A853" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#EA4335" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Sign in with Google`;
+  }
+});
+
+document.getElementById('btn-sign-out').addEventListener('click', async () => {
+  if (!confirm('Sign out? Your data will remain local on this device.')) return;
+  await chrome.runtime.sendMessage({ type: 'sync-sign-out' });
+  loadSyncStatus();
+  showStatus();
+});
+
+document.getElementById('btn-sync-now').addEventListener('click', async (e) => {
+  const btn = e.target;
+  btn.disabled = true;
+  btn.textContent = 'Syncing...';
+
+  try {
+    const result = await chrome.runtime.sendMessage({ type: 'sync-now' });
+    if (result.error) throw new Error(result.error);
+    renderInsights();
+    loadProfile();
+    showStatus();
+  } catch (err) {
+    alert(`Sync failed: ${err.message}`);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Sync Now';
+  }
+});
 
 // --- Init ---
 init();

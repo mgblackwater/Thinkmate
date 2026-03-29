@@ -3,7 +3,7 @@
   "name": "Thinkmate",
   "version": "1.0.0",
   "description": "Your thinking partner — AI coaching layer for any website",
-  "permissions": ["storage", "activeTab"],
+  "permissions": ["storage", "activeTab", "identity"],
   "commands": {
     "toggle-panel": {
       "suggested_key": {
@@ -16,7 +16,8 @@
   "host_permissions": [
     "https://generativelanguage.googleapis.com/*",
     "https://openrouter.ai/*",
-    "http://localhost/*"
+    "http://localhost/*",
+    "https://*.supabase.co/*"
   ],
   "background": {
     "service_worker": "background.js",
@@ -50,6 +51,7 @@
         "core/detector.js",
         "core/storage.js",
         "core/memory.js",
+        "core/sync.js",
         "core/api.js",
         "coaches/index.js",
         "coaches/english-coach.js",

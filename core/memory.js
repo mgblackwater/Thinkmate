@@ -23,6 +23,7 @@ export async function getProfile() {
 
 export async function setProfile(profile) {
   await chrome.storage.sync.set({ user_profile: profile });
+  triggerSync();
 }
 
 // --- Auto-learned Memory (chrome.storage.local) ---
@@ -41,6 +42,7 @@ export async function getMemory() {
 
 async function saveMemory(memory) {
   await chrome.storage.local.set({ learned_memory: memory });
+  triggerSync();
 }
 
 // --- Session Context (in-memory, per domain) ---
@@ -214,6 +216,28 @@ export async function exportAllData() {
   const profile = await getProfile();
   const memory = await getMemory();
   return { profile, memory, exported_at: new Date().toISOString() };
+}
+
+// --- Sync trigger (debounced, best-effort) ---
+
+let syncTimer = null;
+
+function triggerSync() {
+  // Debounce: wait 2s after last save before syncing
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(async () => {
+    try {
+      const profile = await getProfile();
+      const memory = await getMemory();
+      await chrome.runtime.sendMessage({
+        type: 'sync-push',
+        profile,
+        memory
+      });
+    } catch {
+      // Sync is best-effort — ignore failures silently
+    }
+  }, 2000);
 }
 
 export { PROFILE_DEFAULTS, MEMORY_DEFAULTS };
