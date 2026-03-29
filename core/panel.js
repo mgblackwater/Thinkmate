@@ -37,7 +37,14 @@ export class Panel {
     this.trigger.className = 'tm-trigger';
     this.trigger.innerHTML = '<span class="tm-trigger-icon">T</span>';
     this.trigger.style.display = 'none';
-    this.trigger.addEventListener('click', () => this.toggle());
+    // Use late binding so content.js can override toggle()
+    this.trigger.addEventListener('click', () => {
+      if (this._onTriggerClick) {
+        this._onTriggerClick();
+      } else {
+        this.toggle();
+      }
+    });
     this.shadow.appendChild(this.trigger);
   }
 
