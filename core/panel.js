@@ -85,10 +85,50 @@ export class Panel {
     this.panel.addEventListener('input', (e) => this._handleInput(e));
     this.panel.addEventListener('change', (e) => this._handleSettingChange(e));
 
+    // Draggable by header
+    this._initDrag();
+
     // Close on outside click
     document.addEventListener('click', (e) => {
       if (this.isVisible && !this.host.contains(e.target) && e.target !== this.host) {
         this.hide();
+      }
+    });
+  }
+
+  _initDrag() {
+    const header = this.panel.querySelector('.tm-header');
+    let isDragging = false;
+    let startX, startY, startLeft, startTop;
+
+    header.style.cursor = 'grab';
+
+    header.addEventListener('mousedown', (e) => {
+      if (e.target.closest('[data-action]')) return; // Don't drag on close button
+      isDragging = true;
+      header.style.cursor = 'grabbing';
+      const rect = this.panel.getBoundingClientRect();
+      startX = e.clientX;
+      startY = e.clientY;
+      startLeft = rect.left;
+      startTop = rect.top;
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      this.panel.style.left = `${startLeft + dx}px`;
+      this.panel.style.top = `${startTop + dy}px`;
+      this.panel.style.bottom = 'auto';
+      this.panel.style.right = 'auto';
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (isDragging) {
+        isDragging = false;
+        header.style.cursor = 'grab';
       }
     });
   }
