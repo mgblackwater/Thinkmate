@@ -119,4 +119,14 @@ chrome.action.onClicked.addListener(async (tab) => {
   }
 });
 
+// Handle keyboard shortcut
+chrome.commands.onCommand.addListener(async (command) => {
+  if (command === 'toggle-panel') {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab?.id) {
+      chrome.tabs.sendMessage(tab.id, { type: 'toggle-panel' });
+    }
+  }
+});
+
 console.log('Thinkmate background service worker loaded');
