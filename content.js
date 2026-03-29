@@ -26,14 +26,27 @@
   const panel = new Panel({
     coaches: enabledCoaches,
     panelPosition: settings.panel_position,
-    onGetModelName: async (coachId) => {
+    onGetSettings: async (coachId) => {
       const s = await storageModule.getAll();
-      const override = s.coach_settings[coachId]?.model_override;
-      const modelStr = override || s.default_model || '';
-      if (!modelStr) return '';
-      const [provider, ...parts] = modelStr.split(':');
-      const model = parts.join(':');
-      return `${model} (${provider})`;
+      const coachSettings = s.coach_settings[coachId] || {};
+      const currentModel = coachSettings.model_override || '';
+      const defaultModel = s.default_model || '';
+      // Parse default model name for display
+      let modelName = '';
+      if (defaultModel) {
+        const [p, ...parts] = defaultModel.split(':');
+        modelName = parts.join(':');
+      }
+      // Fetch all available models
+      let models = [];
+      try {
+        const resp = await chrome.runtime.sendMessage({ type: 'fetch-models', provider: 'all' });
+        models = resp.models || [];
+      } catch { /* ignore */ }
+      return { coachSettings, modelName, models, currentModel };
+    },
+    onSaveSetting: async (coachId, key, value) => {
+      await storageModule.setCoachSetting(coachId, key, value);
     },
     onAnalyze: async (coach, text) => {
       // Read fresh settings

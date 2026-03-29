@@ -78,20 +78,11 @@
 }
 
 .tm-brand {
+  flex: 1;
   font-size: 15px;
   font-weight: 700;
   color: #6c63ff;
   letter-spacing: 0.5px;
-}
-
-.tm-model-label {
-  flex: 1;
-  font-size: 11px;
-  color: #a0aec0;
-  text-align: right;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .tm-close {
@@ -209,6 +200,54 @@
   color: #6c63ff;
   border-color: #6c63ff;
   background: rgba(108, 99, 255, 0.08);
+}
+
+/* --- Inline Settings Bar --- */
+
+.tm-settings-bar {
+  display: none;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #fafbfc;
+  align-items: center;
+}
+
+.tm-inline-select {
+  padding: 3px 6px;
+  font-size: 11px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  background: #fff;
+  color: #4a5568;
+  outline: none;
+  cursor: pointer;
+  max-width: 160px;
+}
+
+.tm-inline-select:focus {
+  border-color: #6c63ff;
+}
+
+.tm-inline-input {
+  padding: 3px 6px;
+  font-size: 11px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  background: #fff;
+  color: #4a5568;
+  outline: none;
+  width: 100px;
+}
+
+.tm-inline-input:focus {
+  border-color: #6c63ff;
+}
+
+.tm-model-select {
+  margin-left: auto;
+  max-width: 200px;
 }
 
 /* --- Section Nav (anchor links) --- */

@@ -2,11 +2,12 @@
 // Panel rendering engine — builds UI from coach outputSchema
 
 export class Panel {
-  constructor({ coaches, onAnalyze, onApply, onGetModelName, panelPosition }) {
+  constructor({ coaches, onAnalyze, onApply, onGetSettings, onSaveSetting, panelPosition }) {
     this.coaches = coaches;
     this.onAnalyze = onAnalyze;
     this.onApply = onApply;
-    this.onGetModelName = onGetModelName;
+    this.onGetSettings = onGetSettings;
+    this.onSaveSetting = onSaveSetting;
     this.panelPosition = panelPosition || 'anchored';
     this.activeCoachId = coaches[0]?.id || null;
     this.activeTabKey = null;
@@ -82,6 +83,7 @@ export class Panel {
     // Event delegation
     this.panel.addEventListener('click', (e) => this._handleClick(e));
     this.panel.addEventListener('input', (e) => this._handleInput(e));
+    this.panel.addEventListener('change', (e) => this._handleSettingChange(e));
 
     // Close on outside click
     document.addEventListener('click', (e) => {
@@ -99,10 +101,10 @@ export class Panel {
     return `
       <div class="tm-header">
         <span class="tm-brand">Thinkmate</span>
-        <span class="tm-model-label" data-display="model-name"></span>
         <button class="tm-close" data-action="close">&times;</button>
       </div>
       <div class="tm-coach-tabs">${coachTabs}</div>
+      <div class="tm-settings-bar" data-container="settings-bar"></div>
       <div class="tm-input-area">
         <textarea class="tm-textarea" placeholder="Type or paste text to analyze..." data-input="text"></textarea>
         <div class="tm-input-footer">
@@ -127,7 +129,7 @@ export class Panel {
     const textarea = this.panel.querySelector('[data-input="text"]');
     textarea.value = text || '';
     this._updateCharCount(text || '');
-    this._updateModelLabel();
+    this._renderSettingsBar();
     this._clearResult();
 
     this._positionPanel();
@@ -214,14 +216,65 @@ export class Panel {
     el.textContent = `${text.length} chars / ${words} words`;
   }
 
-  async _updateModelLabel() {
-    const el = this.panel.querySelector('[data-display="model-name"]');
-    if (!el || !this.onGetModelName) return;
+  _handleSettingChange(e) {
+    const key = e.target.dataset?.inlineSetting;
+    if (!key || !this.onSaveSetting) return;
+    this.onSaveSetting(this.activeCoachId, key, e.target.value);
+  }
+
+  async _renderSettingsBar() {
+    const bar = this.panel.querySelector('[data-container="settings-bar"]');
+    if (!bar || !this.onGetSettings) return;
+
     try {
-      const name = await this.onGetModelName(this.activeCoachId);
-      el.textContent = name || '';
+      const { coachSettings, modelName, models, currentModel } = await this.onGetSettings(this.activeCoachId);
+      const coach = this.coaches.find(c => c.id === this.activeCoachId);
+
+      let html = '';
+
+      // Coach-specific settings (inline selects)
+      if (coach?.settings) {
+        for (const [key, config] of Object.entries(coach.settings)) {
+          if (config.type === 'select') {
+            const val = coachSettings[key] || config.default;
+            html += `<select class="tm-inline-select" data-inline-setting="${key}">`;
+            html += config.options.map(opt =>
+              `<option value="${opt}" ${opt === val ? 'selected' : ''}>${opt}</option>`
+            ).join('');
+            html += `</select>`;
+          } else if (config.type === 'text') {
+            const val = coachSettings[key] || config.default || '';
+            html += `<input class="tm-inline-input" type="text" data-inline-setting="${key}" value="${this._escapeHtml(val)}" placeholder="${config.label}">`;
+          }
+        }
+      }
+
+      // Model selector
+      if (models && models.length > 0) {
+        html += `<select class="tm-inline-select tm-model-select" data-inline-setting="model_override">`;
+        html += `<option value="">Default${modelName ? ': ' + modelName : ''}</option>`;
+
+        // Group by provider
+        const grouped = {};
+        models.forEach(m => {
+          if (!grouped[m.providerName]) grouped[m.providerName] = [];
+          grouped[m.providerName].push(m);
+        });
+        for (const [providerName, providerModels] of Object.entries(grouped)) {
+          html += `<optgroup label="${providerName}">`;
+          providerModels.forEach(m => {
+            const val = `${m.provider}:${m.id}`;
+            html += `<option value="${val}" ${val === currentModel ? 'selected' : ''}>${m.name}</option>`;
+          });
+          html += `</optgroup>`;
+        }
+        html += `</select>`;
+      }
+
+      bar.innerHTML = html;
+      bar.style.display = html ? 'flex' : 'none';
     } catch {
-      el.textContent = '';
+      bar.style.display = 'none';
     }
   }
 
@@ -233,7 +286,7 @@ export class Panel {
       tab.classList.toggle('tm-active', tab.dataset.coachId === coachId);
     });
     this._clearResult();
-    this._updateModelLabel();
+    this._renderSettingsBar();
   }
 
   // --- Analysis ---
