@@ -107,7 +107,32 @@ providerSelect.addEventListener('change', () => {
 });
 
 // --- Model Loading ---
+const providerStatusEl = document.getElementById('provider-status');
+
+function showProviderStatus(type, message) {
+  providerStatusEl.style.display = 'block';
+  if (type === 'success') {
+    providerStatusEl.style.background = '#f0fff4';
+    providerStatusEl.style.border = '1px solid #c6f6d5';
+    providerStatusEl.style.color = '#276749';
+  } else if (type === 'error') {
+    providerStatusEl.style.background = '#fff5f5';
+    providerStatusEl.style.border = '1px solid #fed7d7';
+    providerStatusEl.style.color = '#c53030';
+  } else {
+    providerStatusEl.style.background = '#ebf8ff';
+    providerStatusEl.style.border = '1px solid #bee3f8';
+    providerStatusEl.style.color = '#2b6cb0';
+  }
+  providerStatusEl.textContent = message;
+}
+
+function hideProviderStatus() {
+  providerStatusEl.style.display = 'none';
+}
+
 async function loadModels(provider) {
+  hideProviderStatus();
   try {
     const response = await chrome.runtime.sendMessage({ type: 'fetch-models', provider });
     if (response.error) throw new Error(response.error);
@@ -117,15 +142,36 @@ async function loadModels(provider) {
     switch (provider) {
       case 'gemini':
         populateSelect(geminiModel, models, currentSettings.gemini_model);
+        if (currentSettings.gemini_api_key) {
+          showProviderStatus('success', `Connected — ${models.length} models available`);
+        }
         break;
       case 'openrouter':
         populateSelect(openrouterModel, models, currentSettings.openrouter_model, m => `${m.name} (${m.pricing || 'Free'})`);
+        if (models.length > 0) {
+          showProviderStatus('success', `Connected — ${models.length} models available`);
+        }
         break;
       case 'ollama':
         populateSelect(ollamaModel, models, currentSettings.ollama_model);
+        if (models.length > 0) {
+          showProviderStatus('success', `Connected — ${models.length} models available`);
+        } else {
+          showProviderStatus('error', `No models found. Is Ollama running at ${currentSettings.ollama_base_url}?`);
+        }
         break;
     }
   } catch (err) {
+    const msg = err.message || String(err);
+    if (provider === 'ollama') {
+      if (msg.includes('403')) {
+        showProviderStatus('error', 'Ollama blocked the request (403). Set OLLAMA_ORIGINS=* environment variable and restart Ollama.');
+      } else {
+        showProviderStatus('error', `Cannot connect to Ollama at ${currentSettings.ollama_base_url}. Is it running?`);
+      }
+    } else {
+      showProviderStatus('error', `Failed to connect: ${msg}`);
+    }
     console.error('Failed to load models:', err);
   }
 }
