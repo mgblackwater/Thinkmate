@@ -12,8 +12,8 @@
       ]
     },
     "condition": {
-      "urlFilter": "localhost:11434/*",
-      "resourceTypes": ["xmlhttprequest"]
+      "urlFilter": "||localhost",
+      "resourceTypes": ["xmlhttprequest", "other"]
     }
   }
 ]
