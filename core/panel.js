@@ -220,6 +220,9 @@ export class Panel {
     const key = e.target.dataset?.inlineSetting;
     if (!key || !this.onSaveSetting) return;
     this.onSaveSetting(this.activeCoachId, key, e.target.value);
+    // Track pending changes so re-render uses fresh values
+    if (!this._pendingSettings) this._pendingSettings = {};
+    this._pendingSettings[key] = e.target.value;
     // Re-render to handle showWhen dependencies
     if (e.target.tagName === 'SELECT') {
       this._renderSettingsBar();
@@ -231,7 +234,9 @@ export class Panel {
     if (!bar || !this.onGetSettings) return;
 
     try {
-      const { coachSettings, modelName, models, currentModel } = await this.onGetSettings(this.activeCoachId);
+      const { coachSettings: storedSettings, modelName, models, currentModel } = await this.onGetSettings(this.activeCoachId);
+      // Merge any pending (unsaved) changes on top of stored settings
+      const coachSettings = { ...storedSettings, ...this._pendingSettings };
       const coach = this.coaches.find(c => c.id === this.activeCoachId);
 
       let html = '';
@@ -293,6 +298,7 @@ export class Panel {
 
   _switchCoach(coachId) {
     this.activeCoachId = coachId;
+    this._pendingSettings = {};
     this.panel.querySelectorAll('.tm-coach-tab').forEach(tab => {
       tab.classList.toggle('tm-active', tab.dataset.coachId === coachId);
     });
