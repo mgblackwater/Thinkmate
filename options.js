@@ -48,6 +48,7 @@ async function init() {
 
   loadAllModels();
   renderCoachList();
+  populateQuickCorrectCoaches();
   loadProfile();
 
   // Personalization + Memory toggles
@@ -208,6 +209,20 @@ ollamaUrl.addEventListener('change', () => {
 defaultModelSelect.addEventListener('change', () => save({ default_model: defaultModelSelect.value }));
 panelPosition.addEventListener('change', () => save({ panel_position: panelPosition.value }));
 themeSelect.addEventListener('change', () => save({ theme: themeSelect.value }));
+
+// Quick Correct Coach dropdown
+const quickCorrectSelect = document.getElementById('quick-correct-coach');
+function populateQuickCorrectCoaches() {
+  quickCorrectSelect.innerHTML = '';
+  coaches.forEach(c => {
+    const option = document.createElement('option');
+    option.value = c.id;
+    option.textContent = `${c.icon} ${c.name}`;
+    if (c.id === currentSettings.quick_correct_coach) option.selected = true;
+    quickCorrectSelect.appendChild(option);
+  });
+}
+quickCorrectSelect.addEventListener('change', () => save({ quick_correct_coach: quickCorrectSelect.value }));
 
 // --- Personalization & Memory Toggles ---
 const togglePersonalization = document.getElementById('toggle-personalization');

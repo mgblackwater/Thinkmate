@@ -156,29 +156,46 @@
     }
   });
 
-  // --- Quick-correct: grab text, run English Coach, replace ---
+  // --- Quick-correct toast ---
+  let quickToast = null;
+  function showQuickToast(msg) {
+    if (!quickToast) {
+      quickToast = document.createElement('div');
+      quickToast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#fff;border:1px solid #6c63ff;color:#2d3748;padding:8px 16px;border-radius:8px;font-size:13px;font-family:sans-serif;z-index:2147483647;box-shadow:0 4px 12px rgba(0,0,0,0.1);transition:opacity 0.3s;';
+      document.body.appendChild(quickToast);
+    }
+    quickToast.textContent = msg;
+    quickToast.style.opacity = '1';
+    clearTimeout(quickToast._timer);
+    quickToast._timer = setTimeout(() => { quickToast.style.opacity = '0'; }, 2500);
+  }
+
+  // --- Quick-correct: grab text, run configured coach, replace ---
   async function quickCorrect() {
     const el = detector.activeElement || document.activeElement;
     if (!el) return;
     const text = detector.getText(el);
     if (!text || text.trim().length < 2) return;
 
-    // Find English Coach
-    const englishCoach = coachesModule.coaches.find(c => c.id === 'english-coach');
-    if (!englishCoach) return;
+    // Show toast feedback
+    showQuickToast('Correcting...');
 
     try {
-      // Build prompt
       const freshSettings = await storageModule.getAll();
-      const coachSettings = freshSettings.coach_settings['english-coach'] || {};
-      const basePrompt = englishCoach.systemPrompt(coachSettings);
+      const coachId = freshSettings.quick_correct_coach || 'english-coach';
+      const coach = coachesModule.coaches.find(c => c.id === coachId);
+      if (!coach) { showQuickToast('Coach not found'); return; }
 
-      const memEnabled = (await storageModule.get('memory_enabled')) === true;
-      const persEnabled = (await storageModule.get('personalization_enabled')) === true;
+      const coachSettings = freshSettings.coach_settings[coachId] || {};
+      const basePrompt = typeof coach.systemPrompt === 'function'
+        ? coach.systemPrompt(coachSettings) : coach.systemPrompt;
+
+      const memEnabled = freshSettings.memory_enabled === true;
+      const persEnabled = freshSettings.personalization_enabled === true;
       const contextPrefix = persEnabled ? await memoryModule.buildContextPrefix() : '';
       const systemPrompt = contextPrefix + basePrompt;
       const sessionMessages = memEnabled ? memoryModule.buildSessionMessages(currentDomain) : [];
-      const modelOverride = freshSettings.coach_settings['english-coach']?.model_override || '';
+      const modelOverride = freshSettings.coach_settings[coachId]?.model_override || '';
 
       const response = await chrome.runtime.sendMessage({
         type: 'analyze',
@@ -188,7 +205,9 @@
         modelOverride
       });
 
-      if (!response || response.error || !response.content) return;
+      if (!response) { showQuickToast('No response. Try reloading.'); return; }
+      if (response.error) { showQuickToast(response.error); return; }
+      if (!response.content) { showQuickToast('Empty response'); return; }
 
       let result;
       try {
@@ -196,15 +215,20 @@
       } catch {
         const match = response.content.match(/```(?:json)?\s*([\s\S]*?)```/);
         if (match) result = JSON.parse(match[1]);
-        else return;
+        else { showQuickToast('Bad response format'); return; }
       }
 
-      // Replace text with corrected version
-      if (result.corrected && result.corrected !== text) {
-        detector.applyText(el, result.corrected);
+      // Replace text with corrected/rewritten version
+      const replacement = result.corrected || result.rewritten || result.translated;
+      if (replacement && replacement !== text) {
+        detector.applyText(el, replacement);
+        showQuickToast('Corrected!');
+      } else {
+        showQuickToast('Already perfect!');
       }
     } catch (err) {
       console.error('[Thinkmate] Quick-correct failed:', err);
+      showQuickToast('Failed: ' + (err.message || 'unknown error'));
     }
   }
 
