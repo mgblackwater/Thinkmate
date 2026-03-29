@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h2>Thinkmate Icon Generator</h2>
+<p>Click each link to download the icon, then save to the icons/ folder.</p>
+<script>
+[16, 48, 128].forEach(size => {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d');
+
+  // Background circle
+  ctx.fillStyle = '#1a1a2e';
+  ctx.beginPath();
+  ctx.arc(size/2, size/2, size/2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Letter T
+  ctx.fillStyle = '#00d4aa';
+  ctx.font = `bold ${size * 0.6}px Arial`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('T', size/2, size/2);
+
+  const link = document.createElement('a');
+  link.download = `icon${size}.png`;
+  link.href = canvas.toDataURL();
+  link.textContent = `Download icon${size}.png`;
+  link.style.cssText = 'display:block;margin:10px;font-size:18px;color:#00d4aa;';
+  document.body.appendChild(link);
+});
+</script>
+</body>
+</html>
