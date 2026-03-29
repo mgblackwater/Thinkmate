@@ -552,19 +552,28 @@ export class Panel {
       return;
     }
 
-    try {
-      // Re-focus the source element before applying
-      this.sourceElement.focus();
-      if (this.onApply) {
-        this.onApply(this.sourceElement, text);
+    const el = this.sourceElement;
+    const applyFn = this.onApply;
+
+    // Hide panel first, then apply after a short delay
+    // This returns focus to the page before we try to write
+    this.hide();
+
+    setTimeout(() => {
+      try {
+        el.focus();
+        if (applyFn) {
+          applyFn(el, text);
+        }
+        // Show toast briefly
         this._showToast('Applied!');
+      } catch (err) {
+        console.error('[Thinkmate] Apply failed:', err);
+        navigator.clipboard.writeText(text).then(() => {
+          this._showToast('Copied to clipboard instead');
+        });
       }
-    } catch (err) {
-      console.error('[Thinkmate] Apply failed:', err);
-      navigator.clipboard.writeText(text).then(() => {
-        this._showToast('Copied to clipboard instead');
-      });
-    }
+    }, 150);
   }
 
   _showToast(message) {
