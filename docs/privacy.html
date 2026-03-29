@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thinkmate — Privacy Policy</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f7fafc; color: #2d3748; line-height: 1.8; padding: 40px 24px; max-width: 720px; margin: 0 auto; }
+    h1 { font-size: 28px; font-weight: 700; color: #6c63ff; margin-bottom: 8px; }
+    .subtitle { color: #a0aec0; font-size: 14px; margin-bottom: 40px; }
+    h2 { font-size: 18px; font-weight: 600; color: #2d3748; margin: 32px 0 12px; }
+    p, li { font-size: 15px; color: #4a5568; margin-bottom: 12px; }
+    ul { padding-left: 24px; margin-bottom: 16px; }
+    strong { color: #2d3748; }
+    .highlight { background: #f0fff4; border: 1px solid #c6f6d5; border-radius: 8px; padding: 16px; margin: 20px 0; color: #276749; font-size: 15px; }
+    a { color: #6c63ff; }
+    .footer { margin-top: 48px; padding-top: 24px; border-top: 1px solid #e2e8f0; font-size: 13px; color: #a0aec0; }
+  </style>
+</head>
+<body>
+  <h1>Privacy Policy</h1>
+  <p class="subtitle">Thinkmate Chrome Extension — Last updated: March 30, 2026</p>
+
+  <div class="highlight">
+    <strong>Thinkmate has no servers.</strong> Your messages are sent directly to your chosen AI provider and are never stored, collected, or transmitted to any Thinkmate-owned infrastructure.
+  </div>
+
+  <h2>What Thinkmate Does</h2>
+  <p>Thinkmate is a browser extension that provides AI-powered coaching on text you write or select on any webpage. It sends your text to an AI provider you configure (Gemini, Groq, OpenRouter, or Ollama) and displays coaching feedback in a floating panel.</p>
+
+  <h2>Data We Do NOT Collect</h2>
+  <ul>
+    <li>We do not collect, store, or transmit your messages or text content</li>
+    <li>We do not track your browsing history or web activity</li>
+    <li>We do not collect analytics, telemetry, or usage metrics</li>
+    <li>We do not use cookies or tracking pixels</li>
+    <li>We do not have servers — there is nowhere for your data to be sent</li>
+  </ul>
+
+  <h2>Data Stored Locally on Your Device</h2>
+  <p>Thinkmate stores the following data in your browser's local storage (<code>chrome.storage</code>). This data never leaves your device unless you explicitly enable cloud sync.</p>
+  <ul>
+    <li><strong>Provider settings:</strong> API keys for your AI providers, selected models, base URLs. Stored in <code>chrome.storage.sync</code> (syncs across your Chrome devices via your Google account).</li>
+    <li><strong>Coach settings:</strong> Coach preferences such as IELTS target level, English variant, target language for translation.</li>
+    <li><strong>UI preferences:</strong> Panel position, theme, keyboard shortcuts.</li>
+  </ul>
+
+  <h2>Optional: Personalization (Off by Default)</h2>
+  <p>If you enable personalization, you may provide:</p>
+  <ul>
+    <li><strong>Profile information:</strong> Name, nationality, native language, profession, seniority, goals, work context, communication style preference.</li>
+  </ul>
+  <p>This information is stored in <code>chrome.storage.sync</code> and is used solely to personalize coaching feedback. It is sent to your configured AI provider as part of the coaching prompt. It is never sent anywhere else.</p>
+
+  <h2>Optional: Memory (Off by Default)</h2>
+  <p>If you enable memory, Thinkmate stores:</p>
+  <ul>
+    <li><strong>Error patterns:</strong> Categories and descriptions of recurring mistakes (e.g., "grammar: subject-verb agreement, 5 occurrences"). Never the actual text.</li>
+    <li><strong>Strong areas:</strong> Categories where you consistently perform well.</li>
+    <li><strong>Usage counts:</strong> How many times each coach and website has been used.</li>
+  </ul>
+  <p>This data is stored in <code>chrome.storage.local</code> (device only) and is automatically pruned after 90 days.</p>
+
+  <h2>Optional: Cloud Memory Sync (Off by Default)</h2>
+  <p>If you enable cloud memory sync, your coaching memory (error patterns, strong areas, usage counts) is synced to a Supabase project that <strong>you own and control</strong>. You provide your own Supabase URL and API key. Thinkmate does not operate any cloud infrastructure.</p>
+
+  <h2>Third-Party AI Providers</h2>
+  <p>When you click "Analyze", your text is sent to whichever AI provider you have configured:</p>
+  <ul>
+    <li><strong>Gemini</strong> (Google) — <a href="https://ai.google.dev/terms" target="_blank">Terms</a></li>
+    <li><strong>Groq</strong> — <a href="https://groq.com/privacy-policy/" target="_blank">Privacy Policy</a></li>
+    <li><strong>OpenRouter</strong> — <a href="https://openrouter.ai/terms" target="_blank">Terms</a></li>
+    <li><strong>Ollama</strong> (Local) — Runs entirely on your machine. No data leaves your device.</li>
+  </ul>
+  <p>Thinkmate does not control how these providers handle your data. Please review their respective privacy policies.</p>
+
+  <h2>Permissions</h2>
+  <ul>
+    <li><strong>storage:</strong> Save your settings and preferences locally.</li>
+    <li><strong>activeTab:</strong> Detect text inputs and selections on the current page.</li>
+    <li><strong>contextMenus:</strong> Add "Analyze with Thinkmate" to the right-click menu.</li>
+    <li><strong>declarativeNetRequest:</strong> Modify request headers for local Ollama server compatibility.</li>
+    <li><strong>Host permissions:</strong> Make API calls to your configured AI providers.</li>
+  </ul>
+
+  <h2>Data Sharing</h2>
+  <p>Thinkmate does not sell, transfer, or share any user data with third parties for any purpose. The only data transmission is between your browser and the AI provider you explicitly configure.</p>
+
+  <h2>Children's Privacy</h2>
+  <p>Thinkmate is not directed at children under 13. We do not knowingly collect data from children.</p>
+
+  <h2>Changes to This Policy</h2>
+  <p>If this privacy policy changes, the updated version will be published at this URL. Material changes will be noted in the extension's changelog.</p>
+
+  <h2>Contact</h2>
+  <p>For questions about this privacy policy or Thinkmate, please open an issue at <a href="https://github.com/mgblackwater/Thinkmate/issues" target="_blank">github.com/mgblackwater/Thinkmate/issues</a>.</p>
+
+  <div class="footer">
+    <p>&copy; 2026 Thinkmate. Open source under MIT License. <a href="https://mgblackwater.github.io/Thinkmate/">Home</a></p>
+  </div>
+</body>
+</html>
