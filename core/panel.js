@@ -220,6 +220,10 @@ export class Panel {
     const key = e.target.dataset?.inlineSetting;
     if (!key || !this.onSaveSetting) return;
     this.onSaveSetting(this.activeCoachId, key, e.target.value);
+    // Re-render to handle showWhen dependencies
+    if (e.target.tagName === 'SELECT') {
+      this._renderSettingsBar();
+    }
   }
 
   async _renderSettingsBar() {
@@ -232,9 +236,16 @@ export class Panel {
 
       let html = '';
 
-      // Coach-specific settings (inline selects)
+      // Coach-specific settings (inline)
       if (coach?.settings) {
         for (const [key, config] of Object.entries(coach.settings)) {
+          // Check showWhen condition
+          if (config.showWhen) {
+            const [depKey, depVal] = Object.entries(config.showWhen)[0];
+            const currentDepVal = coachSettings[depKey] || coach.settings[depKey]?.default;
+            if (currentDepVal !== depVal) continue;
+          }
+
           if (config.type === 'select') {
             const val = coachSettings[key] || config.default;
             html += `<select class="tm-inline-select" data-inline-setting="${key}">`;
@@ -244,7 +255,7 @@ export class Panel {
             html += `</select>`;
           } else if (config.type === 'text') {
             const val = coachSettings[key] || config.default || '';
-            html += `<input class="tm-inline-input" type="text" data-inline-setting="${key}" value="${this._escapeHtml(val)}" placeholder="${config.label}">`;
+            html += `<input class="tm-inline-input" type="text" data-inline-setting="${key}" value="${this._escapeHtml(val)}" placeholder="${config.placeholder || config.label}">`;
           }
         }
       }

@@ -303,6 +303,13 @@ function renderCoachList() {
     // Coach-specific settings
     if (coach.settings && Object.keys(coach.settings).length > 0) {
       Object.entries(coach.settings).forEach(([key, config]) => {
+        // Check showWhen condition
+        if (config.showWhen) {
+          const [depKey, depVal] = Object.entries(config.showWhen)[0];
+          const depCurrent = currentSettings.coach_settings[coach.id]?.[depKey] ?? coach.settings[depKey]?.default;
+          if (depCurrent !== depVal) return;
+        }
+
         const currentVal = currentSettings.coach_settings[coach.id]?.[key] ?? config.default;
         const field = document.createElement('div');
         field.className = 'field';
@@ -317,7 +324,7 @@ function renderCoachList() {
         } else if (config.type === 'text') {
           field.innerHTML = `
             <label>${config.label}</label>
-            <input type="text" data-coach-setting="${coach.id}:${key}" value="${currentVal || ''}">
+            <input type="text" data-coach-setting="${coach.id}:${key}" value="${currentVal || ''}" placeholder="${config.placeholder || ''}">
           `;
         }
 
