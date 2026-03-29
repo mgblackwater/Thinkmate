@@ -3,7 +3,7 @@
   "name": "Thinkmate",
   "version": "1.0.0",
   "description": "Your thinking partner — AI coaching layer for any website",
-  "permissions": ["storage", "activeTab", "declarativeNetRequest"],
+  "permissions": ["storage", "activeTab", "declarativeNetRequest", "contextMenus"],
   "commands": {
     "toggle-panel": {
       "suggested_key": {

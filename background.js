@@ -175,4 +175,22 @@ chrome.commands.onCommand.addListener(async (command) => {
   }
 });
 
+// Context menu — "Analyze with Thinkmate"
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.create({
+    id: 'thinkmate-analyze',
+    title: 'Analyze with Thinkmate',
+    contexts: ['selection']
+  });
+});
+
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+  if (info.menuItemId === 'thinkmate-analyze' && tab?.id) {
+    chrome.tabs.sendMessage(tab.id, {
+      type: 'analyze-selection',
+      text: info.selectionText
+    });
+  }
+});
+
 console.log('Thinkmate background service worker loaded');

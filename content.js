@@ -129,10 +129,76 @@
   }
   panel._onTriggerClick = openPanel;
 
-  // --- Listen for toolbar icon click / keyboard shortcut ---
+  // --- Listen for messages from background ---
   chrome.runtime.onMessage.addListener((message) => {
     if (message.type === 'toggle-panel') {
       openPanel();
+    }
+    if (message.type === 'analyze-selection' && message.text) {
+      panel.show(null, message.text);
+    }
+  });
+
+  // --- Floating ✨ on text selection ---
+  let selectionTrigger = null;
+
+  function createSelectionTrigger() {
+    if (selectionTrigger) return;
+    selectionTrigger = document.createElement('div');
+    selectionTrigger.id = 'thinkmate-sel-trigger';
+    selectionTrigger.innerHTML = '✨';
+    selectionTrigger.style.cssText = 'position:fixed;z-index:2147483646;width:32px;height:32px;border-radius:50%;background:#fff;border:2px solid #6c63ff;display:none;align-items:center;justify-content:center;font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.12);transition:transform 0.15s ease;';
+    selectionTrigger.addEventListener('mouseenter', () => { selectionTrigger.style.transform = 'scale(1.1)'; });
+    selectionTrigger.addEventListener('mouseleave', () => { selectionTrigger.style.transform = 'scale(1)'; });
+    selectionTrigger.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const sel = window.getSelection();
+      const text = sel ? sel.toString().trim() : '';
+      if (text) {
+        panel.show(null, text);
+      }
+      hideSelectionTrigger();
+    });
+    document.body.appendChild(selectionTrigger);
+  }
+
+  function showSelectionTrigger(rect) {
+    createSelectionTrigger();
+    selectionTrigger.style.display = 'flex';
+    selectionTrigger.style.top = `${rect.top - 38}px`;
+    selectionTrigger.style.left = `${rect.right + 4}px`;
+
+    // Keep in viewport
+    if (parseInt(selectionTrigger.style.top) < 4) {
+      selectionTrigger.style.top = `${rect.bottom + 4}px`;
+    }
+    if (parseInt(selectionTrigger.style.left) + 32 > window.innerWidth) {
+      selectionTrigger.style.left = `${rect.left - 36}px`;
+    }
+  }
+
+  function hideSelectionTrigger() {
+    if (selectionTrigger) selectionTrigger.style.display = 'none';
+  }
+
+  document.addEventListener('mouseup', () => {
+    setTimeout(() => {
+      const sel = window.getSelection();
+      const text = sel ? sel.toString().trim() : '';
+      if (text && text.length > 1) {
+        const range = sel.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        showSelectionTrigger(rect);
+      } else {
+        hideSelectionTrigger();
+      }
+    }, 10);
+  });
+
+  document.addEventListener('mousedown', (e) => {
+    if (selectionTrigger && e.target !== selectionTrigger) {
+      hideSelectionTrigger();
     }
   });
 
