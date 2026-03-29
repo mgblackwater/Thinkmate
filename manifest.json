@@ -7,15 +7,15 @@
   "commands": {
     "toggle-panel": {
       "suggested_key": {
-        "default": "Alt+Shift+T",
-        "mac": "Alt+Shift+T"
+        "default": "Ctrl+Period",
+        "mac": "Command+Period"
       },
       "description": "Open/close Thinkmate panel"
     },
     "quick-correct": {
       "suggested_key": {
-        "default": "Alt+Shift+C",
-        "mac": "Alt+Shift+C"
+        "default": "Ctrl+Shift+Period",
+        "mac": "Command+Shift+Period"
       },
       "description": "Quick-correct text in active input"
     }
