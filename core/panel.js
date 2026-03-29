@@ -538,18 +538,29 @@ export class Panel {
   }
 
   _apply() {
-    const text = this.resultData?.corrected || this.resultData?.rewritten || '';
-    if (!text || !this.sourceElement) {
-      this._copy();
+    const text = this.resultData?.corrected || this.resultData?.rewritten || this.resultData?.translated || '';
+    if (!text) {
+      this._showToast('Nothing to apply');
+      return;
+    }
+
+    // No source element — copy instead
+    if (!this.sourceElement) {
+      navigator.clipboard.writeText(text).then(() => {
+        this._showToast('Copied to clipboard (no input field)');
+      });
       return;
     }
 
     try {
+      // Re-focus the source element before applying
+      this.sourceElement.focus();
       if (this.onApply) {
         this.onApply(this.sourceElement, text);
         this._showToast('Applied!');
       }
-    } catch {
+    } catch (err) {
+      console.error('[Thinkmate] Apply failed:', err);
       navigator.clipboard.writeText(text).then(() => {
         this._showToast('Copied to clipboard instead');
       });
