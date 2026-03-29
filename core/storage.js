@@ -19,7 +19,9 @@ const DEFAULTS = {
     }
   },
   custom_coaches: [],
-  memory_enabled: false
+  personalization_enabled: false,
+  memory_enabled: false,
+  cloud_sync_enabled: false
 };
 
 export async function getAll() {

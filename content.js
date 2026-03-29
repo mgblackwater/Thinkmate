@@ -34,12 +34,13 @@
         ? coach.systemPrompt(coachSettings)
         : coach.systemPrompt;
 
-      // Inject memory context if enabled
+      // Inject personalization context if enabled
+      const persEnabled = (await storageModule.get('personalization_enabled')) === true;
       const memEnabled = (await storageModule.get('memory_enabled')) === true;
-      const contextPrefix = memEnabled ? await memoryModule.buildContextPrefix() : '';
+      const contextPrefix = persEnabled ? await memoryModule.buildContextPrefix() : '';
       const systemPrompt = contextPrefix + basePrompt;
 
-      // Build session history messages
+      // Build session history messages (requires memory to be on)
       const sessionMessages = memEnabled ? memoryModule.buildSessionMessages(currentDomain) : [];
 
       // Send to background for API call

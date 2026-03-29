@@ -58,14 +58,20 @@ async function init() {
   renderCoachList();
   loadProfile();
 
-  // Memory toggle
+  // Personalization + Memory toggles
+  const persOn = currentSettings.personalization_enabled === true;
   const memOn = currentSettings.memory_enabled === true;
+  const cloudOn = currentSettings.cloud_sync_enabled === true;
+  togglePersonalization.checked = persOn;
   toggleMemory.checked = memOn;
-  updateMemoryUI(memOn);
+  if (cloudOn) {
+    document.querySelector('input[name="memory-storage"][value="cloud"]').checked = true;
+  }
+  const storageType = cloudOn ? 'cloud' : 'local';
+  updatePersonalizationUI(persOn, memOn, storageType);
 
   if (memOn) renderInsights();
 
-  // Cloud sync
   loadSyncStatus();
   loadSyncConfig();
 }
@@ -157,10 +163,22 @@ async function loadModels(provider) {
         }
         break;
     }
+    // Update coach model override dropdowns
+    updateCoachModelDropdowns(models);
   } catch (err) {
     showProviderStatus('error', `Failed to connect: ${err.message || err}`);
     console.error('Failed to load models:', err);
   }
+}
+
+function updateCoachModelDropdowns(models) {
+  document.querySelectorAll('[data-coach-setting$=":model_override"]').forEach(select => {
+    const currentVal = select.value;
+    const defaultOption = '<option value="">Use default model</option>';
+    select.innerHTML = defaultOption + models.map(m =>
+      `<option value="${m.id}" ${m.id === currentVal ? 'selected' : ''}>${m.name || m.id}</option>`
+    ).join('');
+  });
 }
 
 function populateSelect(select, models, currentValue, labelFn) {
@@ -206,18 +224,53 @@ ollamaModel.addEventListener('change', () => save({ ollama_model: ollamaModel.va
 panelPosition.addEventListener('change', () => save({ panel_position: panelPosition.value }));
 themeSelect.addEventListener('change', () => save({ theme: themeSelect.value }));
 
-// --- Memory & Privacy Toggle ---
+// --- Personalization & Memory Toggles ---
+const togglePersonalization = document.getElementById('toggle-personalization');
 const toggleMemory = document.getElementById('toggle-memory');
+const memorySection = document.getElementById('memory-section');
+const memoryStorageOptions = document.getElementById('memory-storage-options');
+const profileSection = document.getElementById('profile-section');
+const supabaseFieldsSection = document.getElementById('supabase-fields');
 const insightsSection = document.getElementById('insights-section');
+const memoryStorageRadios = document.querySelectorAll('input[name="memory-storage"]');
 
-function updateMemoryUI(memoryOn) {
-  insightsSection.style.display = memoryOn ? '' : 'none';
+function updatePersonalizationUI(persOn, memOn, storageType) {
+  memorySection.classList.toggle('hidden', !persOn);
+  profileSection.classList.toggle('hidden', !persOn);
+  memoryStorageOptions.classList.toggle('hidden', !memOn);
+  supabaseFieldsSection.classList.toggle('hidden', storageType !== 'cloud');
+  insightsSection.style.display = memOn ? '' : 'none';
 }
+
+togglePersonalization.addEventListener('change', () => {
+  const on = togglePersonalization.checked;
+  save({ personalization_enabled: on });
+  if (!on) {
+    toggleMemory.checked = false;
+    save({ memory_enabled: false, cloud_sync_enabled: false });
+  }
+  const storageType = document.querySelector('input[name="memory-storage"]:checked')?.value || 'local';
+  updatePersonalizationUI(on, toggleMemory.checked, storageType);
+});
 
 toggleMemory.addEventListener('change', () => {
   const on = toggleMemory.checked;
   save({ memory_enabled: on });
-  updateMemoryUI(on);
+  if (!on) {
+    document.querySelector('input[name="memory-storage"][value="local"]').checked = true;
+    save({ cloud_sync_enabled: false });
+  }
+  const storageType = document.querySelector('input[name="memory-storage"]:checked')?.value || 'local';
+  updatePersonalizationUI(togglePersonalization.checked, on, storageType);
+});
+
+memoryStorageRadios.forEach(radio => {
+  radio.addEventListener('change', () => {
+    const isCloud = radio.value === 'cloud';
+    save({ cloud_sync_enabled: isCloud });
+    supabaseFieldsSection.classList.toggle('hidden', !isCloud);
+    if (isCloud) loadSyncStatus();
+  });
 });
 
 // --- Coach List ---
@@ -244,11 +297,26 @@ function renderCoachList() {
       </div>
     `;
 
-    if (coach.settings && Object.keys(coach.settings).length > 0) {
-      const settingsDiv = document.createElement('div');
-      settingsDiv.className = `coach-settings ${enabled ? 'visible' : ''}`;
-      settingsDiv.dataset.coachSettings = coach.id;
+    // Always show settings (at minimum: model override)
+    const settingsDiv = document.createElement('div');
+    settingsDiv.className = `coach-settings ${enabled ? 'visible' : ''}`;
+    settingsDiv.dataset.coachSettings = coach.id;
 
+    // Model override dropdown
+    const modelOverride = currentSettings.coach_settings[coach.id]?.model_override || '';
+    const modelField = document.createElement('div');
+    modelField.className = 'field';
+    modelField.innerHTML = `
+      <label>Model Override</label>
+      <select data-coach-setting="${coach.id}:model_override" style="font-size:12px;">
+        <option value="" ${!modelOverride ? 'selected' : ''}>Use default model</option>
+      </select>
+      <div style="font-size:11px; color:#a0aec0; margin-top:4px;">Leave as default to use the provider's model, or select a specific model for this coach.</div>
+    `;
+    settingsDiv.appendChild(modelField);
+
+    // Coach-specific settings
+    if (coach.settings && Object.keys(coach.settings).length > 0) {
       Object.entries(coach.settings).forEach(([key, config]) => {
         const currentVal = currentSettings.coach_settings[coach.id]?.[key] ?? config.default;
         const field = document.createElement('div');
@@ -270,9 +338,9 @@ function renderCoachList() {
 
         settingsDiv.appendChild(field);
       });
-
-      item.appendChild(settingsDiv);
     }
+
+    item.appendChild(settingsDiv);
 
     coachList.appendChild(item);
   });

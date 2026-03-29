@@ -269,76 +269,115 @@
       </div>
     </div>
 
-    <!-- Column 3: Profile + Cloud Sync -->
+    <!-- Column 3: Personalization & Memory -->
     <div>
       <div class="section">
-        <h2>Your Profile</h2>
-        <p style="font-size:13px; color:#a0aec0; margin-bottom:16px;">This information helps Thinkmate personalize coaching to your background, goals, and communication style. All data stays in your browser.</p>
-        <div class="field">
-          <label for="profile-name">Name</label>
-          <input type="text" id="profile-name" placeholder="How should coaches address you?">
-        </div>
-        <div class="field">
-          <label for="profile-nationality">Nationality</label>
-          <input type="text" id="profile-nationality" placeholder="Your country or region">
-        </div>
-        <div class="field">
-          <label for="profile-language">Native Language</label>
-          <input type="text" id="profile-language" placeholder="Your first language">
-        </div>
-        <div class="field">
-          <label for="profile-profession">Profession</label>
-          <input type="text" id="profile-profession" placeholder="Your role or field">
-        </div>
-        <div class="field">
-          <label for="profile-seniority">Seniority</label>
-          <select id="profile-seniority">
-            <option value="">Select...</option>
-            <option value="Junior">Junior</option>
-            <option value="Mid">Mid</option>
-            <option value="Senior">Senior</option>
-            <option value="Lead">Lead</option>
-            <option value="Manager">Manager</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="profile-style">Communication Style</label>
-          <select id="profile-style">
-            <option value="direct">Direct</option>
-            <option value="formal">Formal</option>
-            <option value="casual">Casual</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="profile-goals">Goals</label>
-          <textarea id="profile-goals" placeholder="What are you working towards?"></textarea>
-        </div>
-        <div class="field">
-          <label for="profile-work">Work Context</label>
-          <textarea id="profile-work" placeholder="Describe your work environment"></textarea>
-        </div>
-      </div>
+        <h2>Personalization & Memory</h2>
 
-      <div class="section">
-        <h2>Cloud Sync</h2>
-        <p style="font-size:13px; color:#a0aec0; margin-bottom:16px;">Connect your own Supabase project to sync profile and learned patterns across devices.</p>
-
-        <div id="sync-status" class="sync-status">
-          <span class="dot gray"></span>
-          <span id="sync-label">Not configured</span>
+        <!-- Personalization toggle -->
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+          <div>
+            <div style="font-size:14px; font-weight:600; color:#2d3748;">Enable personalization</div>
+            <div style="font-size:12px; color:#a0aec0; margin-top:2px;">Tailor coaching to your background and goals.</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="toggle-personalization">
+            <span class="toggle-slider"></span>
+          </label>
         </div>
 
-        <div class="field">
-          <label for="supabase-url">Supabase Project URL</label>
-          <input type="text" id="supabase-url" placeholder="https://your-project.supabase.co">
-        </div>
-        <div class="field">
-          <label for="supabase-key">Anon Key</label>
-          <input type="password" id="supabase-key" placeholder="Your Supabase anon/public key">
+        <!-- Memory toggle (visible when personalization is ON) -->
+        <div id="memory-section" class="hidden" style="margin-top:16px; padding-top:16px; border-top:1px solid #edf2f7;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <div>
+              <div style="font-size:14px; font-weight:600; color:#2d3748;">Enable memory</div>
+              <div style="font-size:12px; color:#a0aec0; margin-top:2px;">Learns your recurring mistakes and tracks progress.</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="toggle-memory">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <!-- Memory storage option (visible when memory is ON) -->
+          <div id="memory-storage-options" class="hidden" style="margin-top:12px; padding:12px; background:#f7fafc; border:1px solid #e2e8f0; border-radius:8px;">
+            <div style="font-size:12px; font-weight:600; color:#4a5568; margin-bottom:8px;">Storage</div>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:8px; font-size:13px; color:#2d3748;">
+              <input type="radio" name="memory-storage" value="local" checked> Local only
+              <span style="font-size:11px; color:#a0aec0;">(90-day rolling window, auto-pruned)</span>
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; color:#2d3748;">
+              <input type="radio" name="memory-storage" value="cloud"> Cloud via Supabase
+              <span style="font-size:11px; color:#a0aec0;">(persistent, cross-device)</span>
+            </label>
+
+            <!-- Supabase fields (visible when cloud is selected) -->
+            <div id="supabase-fields" class="hidden" style="margin-top:12px; padding-top:12px; border-top:1px solid #e2e8f0;">
+              <div id="sync-status" class="sync-status">
+                <span class="dot gray"></span>
+                <span id="sync-label">Not configured</span>
+              </div>
+              <div class="field">
+                <label for="supabase-url">Supabase Project URL</label>
+                <input type="text" id="supabase-url" placeholder="https://your-project.supabase.co">
+              </div>
+              <div class="field">
+                <label for="supabase-key">Anon Key</label>
+                <input type="password" id="supabase-key" placeholder="Your Supabase anon/public key">
+              </div>
+              <div class="btn-row">
+                <button class="btn" id="btn-sync-now" disabled>Sync Now</button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="btn-row">
-          <button class="btn" id="btn-sync-now" disabled>Sync Now</button>
+        <!-- Profile fields (visible when personalization is ON) -->
+        <div id="profile-section" class="hidden" style="margin-top:16px; padding-top:16px; border-top:1px solid #edf2f7;">
+          <div style="font-size:13px; font-weight:600; color:#4a5568; margin-bottom:12px;">Your Profile</div>
+          <div class="field">
+            <label for="profile-name">Name</label>
+            <input type="text" id="profile-name" placeholder="How should coaches address you?">
+          </div>
+          <div class="field">
+            <label for="profile-nationality">Nationality</label>
+            <input type="text" id="profile-nationality" placeholder="Your country or region">
+          </div>
+          <div class="field">
+            <label for="profile-language">Native Language</label>
+            <input type="text" id="profile-language" placeholder="Your first language">
+          </div>
+          <div class="field">
+            <label for="profile-profession">Profession</label>
+            <input type="text" id="profile-profession" placeholder="Your role or field">
+          </div>
+          <div class="field">
+            <label for="profile-seniority">Seniority</label>
+            <select id="profile-seniority">
+              <option value="">Select...</option>
+              <option value="Junior">Junior</option>
+              <option value="Mid">Mid</option>
+              <option value="Senior">Senior</option>
+              <option value="Lead">Lead</option>
+              <option value="Manager">Manager</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="profile-style">Communication Style</label>
+            <select id="profile-style">
+              <option value="direct">Direct</option>
+              <option value="formal">Formal</option>
+              <option value="casual">Casual</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="profile-goals">Goals</label>
+            <textarea id="profile-goals" placeholder="What are you working towards?"></textarea>
+          </div>
+          <div class="field">
+            <label for="profile-work">Work Context</label>
+            <textarea id="profile-work" placeholder="Describe your work environment"></textarea>
+          </div>
         </div>
       </div>
     </div>
@@ -350,23 +389,10 @@
         <strong>Thinkmate has no servers.</strong> Your messages are sent directly to your chosen AI provider and are never stored anywhere.
       </p>
       <p style="font-size:13px; color:#718096; margin-bottom:16px; line-height:1.6;">
-        Only coaching metadata is stored: error patterns, progress scores, and your profile preferences. Stored locally on your device by default.
+        <strong>Personalization</strong> reads your profile to tailor responses — no extra data stored.<br>
+        <strong>Memory</strong> stores error patterns and progress scores locally (90-day rolling window). Cloud memory via Supabase is optional and persistent.
       </p>
-
-      <div class="subsection" style="margin-top:0; padding-top:16px; border-top:1px solid #edf2f7;">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-          <div>
-            <div style="font-size:14px; font-weight:600; color:#2d3748;">Enable memory & personalization</div>
-            <div style="font-size:12px; color:#a0aec0; margin-top:2px;">When enabled, Thinkmate learns your recurring mistakes and personalizes coaching to your background and goals. Stored locally on your device.</div>
-          </div>
-          <label class="toggle">
-            <input type="checkbox" id="toggle-memory">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-      </div>
-
-      <div class="btn-row" style="margin-top:20px;">
+      <div class="btn-row">
         <button class="btn" id="btn-export">Export Data as JSON</button>
         <button class="btn btn-danger" id="btn-clear">Clear All Data</button>
       </div>
