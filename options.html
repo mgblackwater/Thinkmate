@@ -11,7 +11,7 @@
       background: #f7fafc;
       color: #2d3748;
       padding: 40px;
-      max-width: 960px;
+      max-width: 1200px;
       margin: 0 auto;
       line-height: 1.5;
     }
@@ -20,9 +20,10 @@
     .header h1 { font-size: 28px; color: #6c63ff; font-weight: 700; letter-spacing: 1px; }
     .header p { color: #a0aec0; font-size: 14px; margin-top: 4px; }
 
-    /* Two-column grid */
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    /* Three-column grid */
+    .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
     .grid .full-width { grid-column: 1 / -1; }
+    .grid .span-2 { grid-column: span 2; }
 
     .section {
       background: #ffffff;
@@ -158,7 +159,7 @@
 
   <div class="grid">
 
-    <!-- Left column: Provider + UI Preferences -->
+    <!-- Column 1: Provider + UI Preferences -->
     <div>
       <div class="section" style="margin-bottom:24px;">
         <h2>AI Provider</h2>
@@ -223,7 +224,7 @@
       </div>
     </div>
 
-    <!-- Right column: Coaches -->
+    <!-- Column 2: Coaches -->
     <div>
       <div class="section">
         <h2>Coaches</h2>
@@ -231,25 +232,25 @@
       </div>
     </div>
 
-    <!-- Full width: Profile -->
-    <div class="section full-width">
-      <h2>Your Profile</h2>
-      <div class="profile-grid">
+    <!-- Column 3: Profile -->
+    <div>
+      <div class="section">
+        <h2>Your Profile</h2>
         <div class="field">
           <label for="profile-name">Name</label>
           <input type="text" id="profile-name" placeholder="Your name">
         </div>
         <div class="field">
           <label for="profile-nationality">Nationality</label>
-          <input type="text" id="profile-nationality" placeholder="e.g. Malaysian, Japanese">
+          <input type="text" id="profile-nationality" placeholder="e.g. Malaysian">
         </div>
         <div class="field">
           <label for="profile-language">Native Language</label>
-          <input type="text" id="profile-language" placeholder="e.g. Malay, Japanese, Arabic">
+          <input type="text" id="profile-language" placeholder="e.g. Malay">
         </div>
         <div class="field">
           <label for="profile-profession">Profession</label>
-          <input type="text" id="profile-profession" placeholder="e.g. Software Engineer, Doctor">
+          <input type="text" id="profile-profession" placeholder="e.g. Software Engineer">
         </div>
         <div class="field">
           <label for="profile-seniority">Seniority</label>
@@ -270,13 +271,13 @@
             <option value="casual">Casual</option>
           </select>
         </div>
-        <div class="field full">
-          <label for="profile-goals">Current Goals</label>
-          <textarea id="profile-goals" placeholder="e.g. IELTS 8.0, Canada PR, improve business writing"></textarea>
+        <div class="field">
+          <label for="profile-goals">Goals</label>
+          <textarea id="profile-goals" placeholder="e.g. IELTS 8.0, Canada PR"></textarea>
         </div>
-        <div class="field full">
+        <div class="field">
           <label for="profile-work">Work Context</label>
-          <textarea id="profile-work" placeholder="e.g. Leading a team of 5, working on healthcare SaaS"></textarea>
+          <textarea id="profile-work" placeholder="e.g. Leading a team of 5"></textarea>
         </div>
       </div>
     </div>
@@ -285,29 +286,22 @@
     <div class="section full-width">
       <h2>Insights</h2>
 
-      <div class="grid" style="gap: 16px;">
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
         <div>
-          <div class="subsection" style="margin-top:0; padding-top:0; border-top:none;">
-            <h3>Weak Areas</h3>
-            <div id="insights-errors" class="insight-list"></div>
-          </div>
-
-          <div class="subsection">
-            <h3>Strong Areas</h3>
-            <div id="insights-strong"></div>
-          </div>
+          <h3 style="font-size:13px;font-weight:600;color:#4a5568;margin-bottom:10px;">Weak Areas</h3>
+          <div id="insights-errors" class="insight-list"></div>
         </div>
-
         <div>
-          <div class="subsection" style="margin-top:0; padding-top:0; border-top:none;">
-            <h3>Most Used Coaches</h3>
+          <h3 style="font-size:13px;font-weight:600;color:#4a5568;margin-bottom:10px;">Strong Areas</h3>
+          <div id="insights-strong"></div>
+          <div style="margin-top:20px;">
+            <h3 style="font-size:13px;font-weight:600;color:#4a5568;margin-bottom:10px;">Most Used Coaches</h3>
             <div id="insights-coaches"></div>
           </div>
-
-          <div class="subsection">
-            <h3>Most Used Sites</h3>
-            <div id="insights-sites"></div>
-          </div>
+        </div>
+        <div>
+          <h3 style="font-size:13px;font-weight:600;color:#4a5568;margin-bottom:10px;">Most Used Sites</h3>
+          <div id="insights-sites"></div>
         </div>
       </div>
 
