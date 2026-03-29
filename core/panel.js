@@ -533,7 +533,10 @@ export class Panel {
 
   updateCoaches(coaches) {
     this.coaches = coaches;
-    this.activeCoachId = coaches[0]?.id || null;
+    // Keep current coach if still available
+    if (!coaches.find(c => c.id === this.activeCoachId)) {
+      this.activeCoachId = coaches[0]?.id || null;
+    }
     const tabsContainer = this.panel.querySelector('.tm-coach-tabs');
     tabsContainer.innerHTML = coaches.map(c =>
       `<button class="tm-coach-tab ${c.id === this.activeCoachId ? 'tm-active' : ''}" data-coach-id="${c.id}">${c.icon} ${c.name}</button>`

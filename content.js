@@ -150,74 +150,126 @@
     if (message.type === 'analyze-selection' && message.text) {
       panel.show(null, message.text);
     }
+    if (message.type === 'quick-correct') {
+      quickCorrect();
+    }
   });
 
-  // --- Floating ✨ on text selection ---
-  let selectionTrigger = null;
+  // --- Quick-correct: grab text, run English Coach, replace ---
+  async function quickCorrect() {
+    const el = detector.activeElement || document.activeElement;
+    if (!el) return;
+    const text = detector.getText(el);
+    if (!text || text.trim().length < 2) return;
 
-  function createSelectionTrigger() {
-    if (selectionTrigger) return;
-    selectionTrigger = document.createElement('div');
-    selectionTrigger.id = 'thinkmate-sel-trigger';
-    selectionTrigger.innerHTML = '✨';
-    selectionTrigger.style.cssText = 'position:fixed;z-index:2147483646;width:32px;height:32px;border-radius:50%;background:#fff;border:2px solid #6c63ff;display:none;align-items:center;justify-content:center;font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.12);transition:transform 0.15s ease;';
-    selectionTrigger.addEventListener('mouseenter', () => { selectionTrigger.style.transform = 'scale(1.1)'; });
-    selectionTrigger.addEventListener('mouseleave', () => { selectionTrigger.style.transform = 'scale(1)'; });
-    selectionTrigger.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const sel = window.getSelection();
-      const text = sel ? sel.toString().trim() : '';
-      if (text) {
-        panel.show(null, text);
+    // Find English Coach
+    const englishCoach = coachesModule.coaches.find(c => c.id === 'english-coach');
+    if (!englishCoach) return;
+
+    try {
+      // Build prompt
+      const freshSettings = await storageModule.getAll();
+      const coachSettings = freshSettings.coach_settings['english-coach'] || {};
+      const basePrompt = englishCoach.systemPrompt(coachSettings);
+
+      const memEnabled = (await storageModule.get('memory_enabled')) === true;
+      const persEnabled = (await storageModule.get('personalization_enabled')) === true;
+      const contextPrefix = persEnabled ? await memoryModule.buildContextPrefix() : '';
+      const systemPrompt = contextPrefix + basePrompt;
+      const sessionMessages = memEnabled ? memoryModule.buildSessionMessages(currentDomain) : [];
+      const modelOverride = freshSettings.coach_settings['english-coach']?.model_override || '';
+
+      const response = await chrome.runtime.sendMessage({
+        type: 'analyze',
+        systemPrompt,
+        userText: text,
+        sessionMessages,
+        modelOverride
+      });
+
+      if (!response || response.error || !response.content) return;
+
+      let result;
+      try {
+        result = JSON.parse(response.content);
+      } catch {
+        const match = response.content.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (match) result = JSON.parse(match[1]);
+        else return;
       }
-      hideSelectionTrigger();
-    });
-    document.body.appendChild(selectionTrigger);
-  }
 
-  function showSelectionTrigger(rect) {
-    createSelectionTrigger();
-    selectionTrigger.style.display = 'flex';
-    selectionTrigger.style.top = `${rect.top - 38}px`;
-    selectionTrigger.style.left = `${rect.right + 4}px`;
-
-    // Keep in viewport
-    if (parseInt(selectionTrigger.style.top) < 4) {
-      selectionTrigger.style.top = `${rect.bottom + 4}px`;
-    }
-    if (parseInt(selectionTrigger.style.left) + 32 > window.innerWidth) {
-      selectionTrigger.style.left = `${rect.left - 36}px`;
+      // Replace text with corrected version
+      if (result.corrected && result.corrected !== text) {
+        detector.applyText(el, result.corrected);
+      }
+    } catch (err) {
+      console.error('[Thinkmate] Quick-correct failed:', err);
     }
   }
 
-  function hideSelectionTrigger() {
-    if (selectionTrigger) selectionTrigger.style.display = 'none';
-  }
+  // --- Floating ✨ on text selection ---
+  const selTrigger = document.createElement('div');
+  selTrigger.id = 'thinkmate-sel-trigger';
+  selTrigger.innerHTML = '✨';
+  Object.assign(selTrigger.style, {
+    position: 'fixed', zIndex: '2147483646',
+    width: '32px', height: '32px', borderRadius: '50%',
+    background: '#fff', border: '2px solid #6c63ff',
+    display: 'none', alignItems: 'center', justifyContent: 'center',
+    fontSize: '16px', cursor: 'pointer',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.12)'
+  });
+
+  selTrigger.addEventListener('mousedown', (e) => {
+    e.preventDefault(); // Prevent losing selection
+    e.stopPropagation();
+  });
+
+  selTrigger.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const sel = window.getSelection();
+    const text = sel ? sel.toString().trim() : '';
+    if (text) {
+      panel.show(null, text);
+    }
+    selTrigger.style.display = 'none';
+  });
+
+  document.body.appendChild(selTrigger);
 
   document.addEventListener('mouseup', () => {
     setTimeout(() => {
       const sel = window.getSelection();
       const text = sel ? sel.toString().trim() : '';
-      if (text && text.length > 1) {
-        const range = sel.getRangeAt(0);
-        const rect = range.getBoundingClientRect();
-        showSelectionTrigger(rect);
+      if (text && text.length > 2) {
+        try {
+          const range = sel.getRangeAt(0);
+          const rect = range.getBoundingClientRect();
+          if (rect.width > 0) {
+            selTrigger.style.display = 'flex';
+            selTrigger.style.top = `${rect.top - 38}px`;
+            selTrigger.style.left = `${rect.right + 4}px`;
+            // Keep in viewport
+            if (rect.top - 38 < 4) selTrigger.style.top = `${rect.bottom + 4}px`;
+            if (rect.right + 36 > window.innerWidth) selTrigger.style.left = `${rect.left - 36}px`;
+          }
+        } catch { /* ignore */ }
       } else {
-        hideSelectionTrigger();
+        selTrigger.style.display = 'none';
       }
-    }, 10);
+    }, 50);
   });
 
   document.addEventListener('mousedown', (e) => {
-    if (selectionTrigger && e.target !== selectionTrigger) {
-      hideSelectionTrigger();
+    if (e.target !== selTrigger && !selTrigger.contains(e.target)) {
+      selTrigger.style.display = 'none';
     }
   });
 
   // --- Listen for settings changes ---
   chrome.storage.onChanged.addListener((changes) => {
-    if (changes.coaches_enabled || changes.coach_settings) {
+    if (changes.coaches_enabled) {
       storageModule.getAll().then(newSettings => {
         const newEnabled = coachesModule.coaches.filter(
           c => (newSettings.coaches_enabled[c.id] ?? c.enabled)

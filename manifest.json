@@ -11,6 +11,13 @@
         "mac": "Command+Shift+Y"
       },
       "description": "Open/close Thinkmate panel"
+    },
+    "quick-correct": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+E",
+        "mac": "Command+Shift+E"
+      },
+      "description": "Quick-correct text in active input (English Coach)"
     }
   },
   "host_permissions": [
