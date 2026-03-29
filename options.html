@@ -21,7 +21,10 @@
     .header p { color: #a0aec0; font-size: 14px; margin-top: 4px; }
 
     /* Responsive grid */
-    .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; align-items: start; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+    .grid > div { display: flex; flex-direction: column; gap: 24px; }
+    .grid > div > .section { flex: 1; }
+    .grid > div > .section:last-child { margin-bottom: 0; }
     .grid .full-width { grid-column: 1 / -1; }
     .grid .span-2 { grid-column: span 2; }
 
@@ -171,7 +174,7 @@
 
     <!-- Column 1: Provider + UI Preferences -->
     <div>
-      <div class="section" style="margin-bottom:24px;">
+      <div class="section">
         <h2>AI Provider</h2>
 
         <div class="field">
