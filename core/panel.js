@@ -51,10 +51,10 @@ export class Panel {
   showTrigger(elRect) {
     if (this.panelPosition === 'toolbar') return;
 
-    // Position at top-right corner of the input field
+    // Position just outside the top-right corner of the input field
     this.trigger.style.display = 'flex';
     this.trigger.style.top = `${elRect.top + window.scrollY - 40}px`;
-    this.trigger.style.left = `${elRect.right + window.scrollX - 36}px`;
+    this.trigger.style.left = `${elRect.right + window.scrollX + 8}px`;
 
     // Keep within viewport
     const triggerBounds = this.trigger.getBoundingClientRect();
