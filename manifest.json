@@ -33,5 +33,28 @@
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "core/panel.js",
+        "core/detector.js",
+        "core/storage.js",
+        "core/api.js",
+        "coaches/index.js",
+        "coaches/english-coach.js",
+        "coaches/clarity-coach.js",
+        "coaches/decision-coach.js",
+        "coaches/debate-coach.js",
+        "coaches/stoic-coach.js",
+        "coaches/scrum-coach.js",
+        "coaches/systems-thinking-coach.js",
+        "coaches/tone-rewriter.js",
+        "coaches/translator-coach.js",
+        "coaches/custom-coach.js",
+        "panel.css"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }
