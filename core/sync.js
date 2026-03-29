@@ -1,5 +1,5 @@
 // core/sync.js
-// Supabase cross-device sync — REST API client + Google OAuth + sync logic
+// Supabase cross-device sync — REST API client + email OTP auth + sync logic
 // No SDK needed — uses fetch against Supabase REST endpoints
 
 // --- Config ---
@@ -36,62 +36,45 @@ export async function clearSession() {
   await chrome.storage.local.remove(SESSION_KEY);
 }
 
-// --- Auth: Google OAuth via chrome.identity ---
+// --- Auth: Email OTP (provider-agnostic, no chrome.identity needed) ---
 
-export async function signInWithGitHub() {
+export async function sendOtp(email) {
   const config = await getConfig();
   if (!config.url || !config.anon_key) {
     throw new Error('SUPABASE_NOT_CONFIGURED');
   }
 
-  const redirectUrl = chrome.identity.getRedirectURL();
-
-  // Build Supabase OAuth URL
-  const authUrl = `${config.url}/auth/v1/authorize?` + new URLSearchParams({
-    provider: 'github',
-    redirect_to: redirectUrl
-  }).toString();
-
-  // Launch interactive auth flow
-  const callbackUrl = await new Promise((resolve, reject) => {
-    chrome.identity.launchWebAuthFlow(
-      { url: authUrl, interactive: true },
-      (responseUrl) => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-        } else {
-          resolve(responseUrl);
-        }
-      }
-    );
+  await supabaseFetch(config, '/auth/v1/otp', {
+    method: 'POST',
+    body: JSON.stringify({ email })
   });
 
-  // Parse tokens from callback URL fragment
-  // Supabase redirects with: #access_token=...&refresh_token=...&expires_in=...&token_type=bearer
-  const hash = new URL(callbackUrl).hash.substring(1);
-  const params = new URLSearchParams(hash);
+  return { sent: true };
+}
 
-  const accessToken = params.get('access_token');
-  const refreshToken = params.get('refresh_token');
-  const expiresIn = parseInt(params.get('expires_in') || '3600');
-
-  if (!accessToken) {
-    throw new Error('AUTH_FAILED');
+export async function verifyOtp(email, token) {
+  const config = await getConfig();
+  if (!config.url || !config.anon_key) {
+    throw new Error('SUPABASE_NOT_CONFIGURED');
   }
 
-  // Get user info from Supabase
-  const user = await supabaseFetch(config, '/auth/v1/user', {
-    headers: { Authorization: `Bearer ${accessToken}` }
+  const result = await supabaseFetch(config, '/auth/v1/token?grant_type=magiclink', {
+    method: 'POST',
+    body: JSON.stringify({ email, token })
   });
 
+  if (!result.access_token) {
+    throw new Error('INVALID_OTP');
+  }
+
   const session = {
-    access_token: accessToken,
-    refresh_token: refreshToken,
-    expires_at: Date.now() + (expiresIn * 1000),
+    access_token: result.access_token,
+    refresh_token: result.refresh_token,
+    expires_at: Date.now() + (result.expires_in * 1000),
     user: {
-      id: user.id,
-      email: user.email,
-      name: user.user_metadata?.full_name || user.email
+      id: result.user.id,
+      email: result.user.email,
+      name: result.user.user_metadata?.full_name || result.user.email
     }
   };
 

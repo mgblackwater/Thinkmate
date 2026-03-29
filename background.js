@@ -24,8 +24,10 @@ async function handleMessage(message) {
     case 'open-options':
       chrome.runtime.openOptionsPage();
       return { ok: true };
-    case 'sync-sign-in':
-      return handleSyncSignIn();
+    case 'sync-send-otp':
+      return handleSendOtp(message);
+    case 'sync-verify-otp':
+      return handleVerifyOtp(message);
     case 'sync-sign-out':
       return handleSyncSignOut();
     case 'sync-status':
@@ -125,9 +127,14 @@ async function handleCheckProvider() {
 
 // --- Sync handlers ---
 
-async function handleSyncSignIn() {
-  const session = await sync.signInWithGitHub();
-  // After sign-in, do a full sync to merge local + remote data
+async function handleSendOtp({ email }) {
+  await sync.sendOtp(email);
+  return { ok: true };
+}
+
+async function handleVerifyOtp({ email, token }) {
+  const session = await sync.verifyOtp(email, token);
+  // After verification, do a full sync to merge local + remote data
   const result = await sync.performFullSync();
   return { ok: true, user: session.user, sync: result };
 }
