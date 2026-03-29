@@ -90,19 +90,22 @@ export class Detector {
     if (!el) throw new Error('No element to apply to');
 
     if (el.isContentEditable) {
-      el.focus();
+      // Find the actual contenteditable element (might be a parent)
+      let target = el;
+      while (target.parentElement && target.parentElement.isContentEditable) {
+        target = target.parentElement;
+      }
+
+      target.focus();
 
       // Select all content within this element only
       const selection = window.getSelection();
-      const range = document.createRange();
-      range.selectNodeContents(el);
-      selection.removeAllRanges();
-      selection.addRange(range);
+      selection.selectAllChildren(target);
 
       // insertText replaces the current selection
       document.execCommand('insertText', false, text);
 
-      this._dispatchInputEvents(el);
+      this._dispatchInputEvents(target);
     } else {
       el.focus();
 
