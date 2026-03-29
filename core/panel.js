@@ -161,8 +161,11 @@ export class Panel {
       this.panel.style.top = 'auto';
       this.panel.style.left = 'auto';
     } else {
-      // Use trigger button as anchor
-      const triggerRect = this.trigger.getBoundingClientRect();
+      // Use trigger button or caretRect (from selection) as anchor
+      const triggerVisible = this.trigger.style.display !== 'none';
+      const triggerRect = triggerVisible
+        ? this.trigger.getBoundingClientRect()
+        : (this.caretRect || { top: 100, bottom: 108, left: 100, right: 200 });
       const spaceBelow = window.innerHeight - triggerRect.bottom;
       const spaceAbove = triggerRect.top;
 

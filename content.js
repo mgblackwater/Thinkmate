@@ -148,7 +148,8 @@
       openPanel();
     }
     if (message.type === 'analyze-selection' && message.text) {
-      panel.show(null, message.text);
+      // Use last known selection rect if available
+      panel.show(null, message.text, lastSelectionRect);
     }
     if (message.type === 'quick-correct') {
       quickCorrect();
@@ -208,6 +209,7 @@
   }
 
   // --- Floating ✨ on text selection ---
+  let lastSelectionRect = null;
   const selTrigger = document.createElement('div');
   selTrigger.id = 'thinkmate-sel-trigger';
   selTrigger.innerHTML = '✨';
@@ -231,7 +233,12 @@
     const sel = window.getSelection();
     const text = sel ? sel.toString().trim() : '';
     if (text) {
-      panel.show(null, text);
+      try {
+        const rect = sel.getRangeAt(0).getBoundingClientRect();
+        panel.show(null, text, rect);
+      } catch {
+        panel.show(null, text);
+      }
     }
     selTrigger.style.display = 'none';
   });
@@ -247,6 +254,7 @@
           const range = sel.getRangeAt(0);
           const rect = range.getBoundingClientRect();
           if (rect.width > 0) {
+            lastSelectionRect = rect;
             selTrigger.style.display = 'flex';
             selTrigger.style.top = `${rect.top - 38}px`;
             selTrigger.style.left = `${rect.right + 4}px`;
