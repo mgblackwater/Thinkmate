@@ -35,26 +35,28 @@ async function handleMessage(message) {
   }
 }
 
-async function handleAnalyze({ systemPrompt, userText, sessionMessages }) {
+async function handleAnalyze({ systemPrompt, userText, sessionMessages, modelOverride }) {
   const settings = await storage.getAll();
-  const provider = settings.provider;
 
-  let apiKey, baseUrl, model;
+  // Parse provider:model format (e.g. "gemini:gemini-2.0-flash")
+  const selected = modelOverride || settings.default_model || '';
+  const [provider, ...modelParts] = selected.split(':');
+  const model = modelParts.join(':'); // rejoin in case model has colons (e.g. ollama tags)
+
+  if (!provider || !model) throw new Error('NO_MODEL');
+
+  let apiKey, baseUrl;
   switch (provider) {
     case 'gemini':
       apiKey = settings.gemini_api_key;
-      model = settings.gemini_model;
       if (!apiKey) throw new Error('NO_API_KEY');
       break;
     case 'openrouter':
       apiKey = settings.openrouter_api_key;
-      model = settings.openrouter_model;
       if (!apiKey) throw new Error('NO_API_KEY');
       break;
     case 'ollama':
       baseUrl = settings.ollama_base_url;
-      model = settings.ollama_model;
-      if (!model) throw new Error('NO_MODEL');
       break;
   }
 
@@ -64,38 +66,63 @@ async function handleAnalyze({ systemPrompt, userText, sessionMessages }) {
 
 async function handleFetchModels({ provider }) {
   const settings = await storage.getAll();
-  let apiKey, baseUrl;
 
-  switch (provider) {
-    case 'gemini':
-      apiKey = settings.gemini_api_key;
-      break;
-    case 'openrouter':
-      apiKey = settings.openrouter_api_key;
-      // Check cache in local storage (24 hour TTL)
-      {
+  // If no specific provider, fetch from all configured providers
+  if (provider === 'all') {
+    const allModels = [];
+
+    // Gemini
+    if (settings.gemini_api_key) {
+      try {
+        const models = await fetchModels('gemini', { apiKey: settings.gemini_api_key });
+        allModels.push(...models.map(m => ({ ...m, provider: 'gemini', providerName: 'Gemini' })));
+      } catch { /* skip */ }
+    }
+
+    // OpenRouter
+    if (settings.openrouter_api_key) {
+      try {
         const cache = await storage.getLocal('openrouter_models_cache');
         const cacheTime = await storage.getLocal('openrouter_models_cache_time', 0);
+        let models;
         if (cache && Date.now() - cacheTime < 86400000) {
-          return { models: cache };
+          models = cache;
+        } else {
+          models = await fetchModels('openrouter', { apiKey: settings.openrouter_api_key });
+          await storage.setLocal({ openrouter_models_cache: models, openrouter_models_cache_time: Date.now() });
         }
+        allModels.push(...models.map(m => ({ ...m, provider: 'openrouter', providerName: 'OpenRouter' })));
+      } catch { /* skip */ }
+    }
+
+    // Ollama
+    try {
+      const models = await fetchModels('ollama', { baseUrl: settings.ollama_base_url });
+      if (models.length > 0) {
+        allModels.push(...models.map(m => ({ ...m, provider: 'ollama', providerName: 'Ollama' })));
       }
+    } catch { /* skip */ }
+
+    return { models: allModels };
+  }
+
+  // Single provider fetch (legacy support)
+  let apiKey, baseUrl;
+  switch (provider) {
+    case 'gemini': apiKey = settings.gemini_api_key; break;
+    case 'openrouter':
+      apiKey = settings.openrouter_api_key;
+      const cache = await storage.getLocal('openrouter_models_cache');
+      const cacheTime = await storage.getLocal('openrouter_models_cache_time', 0);
+      if (cache && Date.now() - cacheTime < 86400000) return { models: cache };
       break;
-    case 'ollama':
-      baseUrl = settings.ollama_base_url;
-      break;
+    case 'ollama': baseUrl = settings.ollama_base_url; break;
   }
 
   const models = await fetchModels(provider, { apiKey, baseUrl });
-
-  // Cache OpenRouter models in local storage (too large for sync)
   if (provider === 'openrouter') {
-    await storage.setLocal({
-      openrouter_models_cache: models,
-      openrouter_models_cache_time: Date.now()
-    });
+    await storage.setLocal({ openrouter_models_cache: models, openrouter_models_cache_time: Date.now() });
   }
-
   return { models };
 }
 

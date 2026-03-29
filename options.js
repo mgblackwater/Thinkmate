@@ -6,16 +6,10 @@ import * as memory from './core/memory.js';
 import coaches from './coaches/index.js';
 
 // --- DOM References ---
-const providerSelect = document.getElementById('provider');
-const geminiFields = document.getElementById('gemini-fields');
-const openrouterFields = document.getElementById('openrouter-fields');
-const ollamaFields = document.getElementById('ollama-fields');
 const geminiKey = document.getElementById('gemini-key');
-const geminiModel = document.getElementById('gemini-model');
 const openrouterKey = document.getElementById('openrouter-key');
-const openrouterModel = document.getElementById('openrouter-model');
 const ollamaUrl = document.getElementById('ollama-url');
-const ollamaModel = document.getElementById('ollama-model');
+const defaultModelSelect = document.getElementById('default-model');
 const panelPosition = document.getElementById('panel-position');
 const themeSelect = document.getElementById('theme');
 const coachList = document.getElementById('coach-list');
@@ -46,15 +40,13 @@ let currentSettings = {};
 async function init() {
   currentSettings = await storage.getAll();
 
-  providerSelect.value = currentSettings.provider;
   geminiKey.value = currentSettings.gemini_api_key;
   openrouterKey.value = currentSettings.openrouter_api_key;
   ollamaUrl.value = currentSettings.ollama_base_url;
   panelPosition.value = currentSettings.panel_position;
   themeSelect.value = currentSettings.theme || 'light';
 
-  showProviderFields(currentSettings.provider);
-  loadModels(currentSettings.provider);
+  loadAllModels();
   renderCoachList();
   loadProfile();
 
@@ -98,102 +90,94 @@ for (const el of Object.values(profileFields)) {
   if (el) el.addEventListener('change', saveProfile);
 }
 
-// --- Provider Fields ---
-function showProviderFields(provider) {
-  geminiFields.classList.toggle('hidden', provider !== 'gemini');
-  openrouterFields.classList.toggle('hidden', provider !== 'openrouter');
-  ollamaFields.classList.toggle('hidden', provider !== 'ollama');
-}
-
-providerSelect.addEventListener('change', () => {
-  const provider = providerSelect.value;
-  showProviderFields(provider);
-  save({ provider });
-  loadModels(provider);
-});
-
-// --- Model Loading ---
+// --- Model Loading (unified across all providers) ---
 const providerStatusEl = document.getElementById('provider-status');
+let allModels = [];
 
 function showProviderStatus(type, message) {
   providerStatusEl.style.display = 'block';
-  if (type === 'success') {
-    providerStatusEl.style.background = '#f0fff4';
-    providerStatusEl.style.border = '1px solid #c6f6d5';
-    providerStatusEl.style.color = '#276749';
-  } else if (type === 'error') {
-    providerStatusEl.style.background = '#fff5f5';
-    providerStatusEl.style.border = '1px solid #fed7d7';
-    providerStatusEl.style.color = '#c53030';
-  }
+  providerStatusEl.style.background = type === 'success' ? '#f0fff4' : type === 'error' ? '#fff5f5' : '#ebf8ff';
+  providerStatusEl.style.border = type === 'success' ? '1px solid #c6f6d5' : type === 'error' ? '1px solid #fed7d7' : '1px solid #bee3f8';
+  providerStatusEl.style.color = type === 'success' ? '#276749' : type === 'error' ? '#c53030' : '#2b6cb0';
   providerStatusEl.textContent = message;
 }
 
-function hideProviderStatus() {
+async function loadAllModels() {
   providerStatusEl.style.display = 'none';
-}
-
-async function loadModels(provider) {
-  hideProviderStatus();
   try {
-    const response = await chrome.runtime.sendMessage({ type: 'fetch-models', provider });
+    const response = await chrome.runtime.sendMessage({ type: 'fetch-models', provider: 'all' });
     if (response.error) throw new Error(response.error);
+    allModels = response.models || [];
 
-    const models = response.models || [];
+    populateUnifiedSelect(defaultModelSelect, allModels, currentSettings.default_model);
+    updateCoachModelDropdowns();
 
-    switch (provider) {
-      case 'gemini':
-        populateSelect(geminiModel, models, currentSettings.gemini_model);
-        if (currentSettings.gemini_api_key) {
-          showProviderStatus('success', `Connected — ${models.length} models available`);
-        }
-        break;
-      case 'openrouter':
-        populateSelect(openrouterModel, models, currentSettings.openrouter_model, m => `${m.name} (${m.pricing || 'Free'})`);
-        if (models.length > 0) {
-          showProviderStatus('success', `Connected — ${models.length} models available`);
-        }
-        break;
-      case 'ollama':
-        populateSelect(ollamaModel, models, currentSettings.ollama_model);
-        if (models.length > 0) {
-          showProviderStatus('success', `Connected — ${models.length} models available`);
-        } else {
-          showProviderStatus('error', `No models found at ${currentSettings.ollama_base_url}`);
-        }
-        break;
+    if (allModels.length > 0) {
+      const providers = [...new Set(allModels.map(m => m.providerName))];
+      showProviderStatus('success', `${allModels.length} models from ${providers.join(', ')}`);
+    } else {
+      showProviderStatus('error', 'No providers configured. Add an API key above.');
     }
-    // Update coach model override dropdowns
-    updateCoachModelDropdowns(models);
   } catch (err) {
-    showProviderStatus('error', `Failed to connect: ${err.message || err}`);
-    console.error('Failed to load models:', err);
+    showProviderStatus('error', `Failed to load models: ${err.message || err}`);
   }
 }
 
-function updateCoachModelDropdowns(models) {
-  document.querySelectorAll('[data-coach-setting$=":model_override"]').forEach(select => {
-    const currentVal = select.value;
-    const defaultOption = '<option value="">Use default model</option>';
-    select.innerHTML = defaultOption + models.map(m =>
-      `<option value="${m.id}" ${m.id === currentVal ? 'selected' : ''}>${m.name || m.id}</option>`
-    ).join('');
-  });
-}
-
-function populateSelect(select, models, currentValue, labelFn) {
+function populateUnifiedSelect(select, models, currentValue) {
   select.innerHTML = '';
   if (models.length === 0) {
     select.innerHTML = '<option value="">No models available</option>';
     return;
   }
+
+  // Group by provider
+  const grouped = {};
   models.forEach(m => {
-    const option = document.createElement('option');
-    option.value = m.id;
-    option.textContent = labelFn ? labelFn(m) : m.name;
-    if (m.id === currentValue) option.selected = true;
-    select.appendChild(option);
+    if (!grouped[m.providerName]) grouped[m.providerName] = [];
+    grouped[m.providerName].push(m);
   });
+
+  for (const [providerName, providerModels] of Object.entries(grouped)) {
+    const group = document.createElement('optgroup');
+    group.label = providerName;
+    providerModels.forEach(m => {
+      const option = document.createElement('option');
+      option.value = `${m.provider}:${m.id}`;
+      option.textContent = m.pricing ? `${m.name} (${m.pricing})` : m.name;
+      if (`${m.provider}:${m.id}` === currentValue) option.selected = true;
+      group.appendChild(option);
+    });
+    select.appendChild(group);
+  }
+}
+
+function updateCoachModelDropdowns() {
+  document.querySelectorAll('[data-coach-setting$=":model_override"]').forEach(select => {
+    const currentVal = select.value;
+    select.innerHTML = '<option value="">Use default model</option>';
+    populateUnifiedOptions(select, allModels, currentVal);
+  });
+}
+
+function populateUnifiedOptions(select, models, currentValue) {
+  const grouped = {};
+  models.forEach(m => {
+    if (!grouped[m.providerName]) grouped[m.providerName] = [];
+    grouped[m.providerName].push(m);
+  });
+
+  for (const [providerName, providerModels] of Object.entries(grouped)) {
+    const group = document.createElement('optgroup');
+    group.label = providerName;
+    providerModels.forEach(m => {
+      const option = document.createElement('option');
+      option.value = `${m.provider}:${m.id}`;
+      option.textContent = m.name;
+      if (`${m.provider}:${m.id}` === currentValue) option.selected = true;
+      group.appendChild(option);
+    });
+    select.appendChild(group);
+  }
 }
 
 // --- Save Handlers ---
@@ -210,20 +194,18 @@ function showStatus() {
 
 geminiKey.addEventListener('change', () => {
   save({ gemini_api_key: geminiKey.value });
-  loadModels('gemini');
+  loadAllModels();
 });
-geminiModel.addEventListener('change', () => save({ gemini_model: geminiModel.value }));
 openrouterKey.addEventListener('change', () => {
   save({ openrouter_api_key: openrouterKey.value });
   storage.setLocal({ openrouter_models_cache: null, openrouter_models_cache_time: 0 });
-  loadModels('openrouter');
+  loadAllModels();
 });
-openrouterModel.addEventListener('change', () => save({ openrouter_model: openrouterModel.value }));
 ollamaUrl.addEventListener('change', () => {
   save({ ollama_base_url: ollamaUrl.value });
-  loadModels('ollama');
+  loadAllModels();
 });
-ollamaModel.addEventListener('change', () => save({ ollama_model: ollamaModel.value }));
+defaultModelSelect.addEventListener('change', () => save({ default_model: defaultModelSelect.value }));
 panelPosition.addEventListener('change', () => save({ panel_position: panelPosition.value }));
 themeSelect.addEventListener('change', () => save({ theme: themeSelect.value }));
 

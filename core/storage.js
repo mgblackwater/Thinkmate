@@ -4,11 +4,9 @@
 const DEFAULTS = {
   provider: 'gemini',
   gemini_api_key: '',
-  gemini_model: 'gemini-2.0-flash',
   openrouter_api_key: '',
-  openrouter_model: 'meta-llama/llama-3.3-70b-instruct:free',
   ollama_base_url: 'http://localhost:11434',
-  ollama_model: '',
+  default_model: 'gemini:gemini-2.0-flash',
   panel_position: 'cursor',
   theme: 'light',
   coaches_enabled: { 'english-coach': true },

@@ -184,59 +184,52 @@
 
   <div class="grid">
 
-    <!-- Column 1: Provider + UI Preferences -->
+    <!-- Column 1: AI Providers + Default Model + UI Preferences -->
     <div>
       <div class="section">
-        <h2>AI Provider</h2>
+        <h2>AI Providers</h2>
 
-        <div class="field">
-          <label for="provider">Provider</label>
-          <select id="provider">
-            <option value="gemini">Gemini</option>
-            <option value="openrouter">OpenRouter</option>
-            <option value="ollama">Ollama (Local)</option>
-          </select>
-        </div>
-
-        <div id="gemini-fields">
+        <!-- Gemini -->
+        <div style="margin-bottom:16px;">
+          <div style="font-size:13px; font-weight:600; color:#4a5568; margin-bottom:8px;">Gemini</div>
           <div class="field">
             <label for="gemini-key">API Key</label>
             <input type="password" id="gemini-key" placeholder="Enter your Gemini API key">
             <a class="help-link" href="https://aistudio.google.com/apikey" target="_blank">Get a free API key from Google AI Studio</a>
           </div>
-          <div class="field">
-            <label for="gemini-model">Model</label>
-            <select id="gemini-model"></select>
-          </div>
         </div>
 
-        <div id="openrouter-fields" class="hidden">
+        <!-- OpenRouter -->
+        <div style="margin-bottom:16px; padding-top:16px; border-top:1px solid #edf2f7;">
+          <div style="font-size:13px; font-weight:600; color:#4a5568; margin-bottom:8px;">OpenRouter</div>
           <div class="field">
             <label for="openrouter-key">API Key</label>
             <input type="password" id="openrouter-key" placeholder="Enter your OpenRouter API key">
             <a class="help-link" href="https://openrouter.ai/keys" target="_blank">Get an API key from OpenRouter</a>
           </div>
-          <div class="field">
-            <label for="openrouter-model">Model</label>
-            <select id="openrouter-model"><option value="">Enter API key to load models...</option></select>
-          </div>
         </div>
 
-        <div id="ollama-fields" class="hidden">
-          <div style="padding:10px 12px; border-radius:6px; font-size:12px; background:#f0fff4; border:1px solid #c6f6d5; color:#276749; margin-bottom:12px; line-height:1.6;">
-            Local & private — your data stays on your machine. Just run <code style="font-size:11px; background:#c6f6d5; padding:2px 6px; border-radius:3px;">ollama serve</code> and select your model below.
+        <!-- Ollama -->
+        <div style="padding-top:16px; border-top:1px solid #edf2f7;">
+          <div style="font-size:13px; font-weight:600; color:#4a5568; margin-bottom:8px;">Ollama (Local)</div>
+          <div style="padding:8px 10px; border-radius:6px; font-size:11px; background:#f0fff4; border:1px solid #c6f6d5; color:#276749; margin-bottom:8px; line-height:1.5;">
+            Run <code style="font-size:11px; background:#c6f6d5; padding:1px 4px; border-radius:3px;">ollama serve</code> to connect.
           </div>
           <div class="field">
             <label for="ollama-url">Base URL</label>
             <input type="text" id="ollama-url" placeholder="http://localhost:11434">
           </div>
-          <div class="field">
-            <label for="ollama-model">Model</label>
-            <select id="ollama-model"><option value="">Click to load models...</option></select>
-          </div>
         </div>
 
         <div id="provider-status" style="display:none; margin-top:12px; padding:10px 14px; border-radius:8px; font-size:13px;"></div>
+      </div>
+
+      <div class="section">
+        <h2>Default Model</h2>
+        <div class="field">
+          <select id="default-model" style="font-size:13px;"></select>
+          <div style="font-size:11px; color:#a0aec0; margin-top:4px;">Models from all configured providers. Coaches can override this.</div>
+        </div>
       </div>
 
       <div class="section">

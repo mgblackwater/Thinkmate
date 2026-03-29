@@ -43,6 +43,9 @@
       // Build session history messages (requires memory to be on)
       const sessionMessages = memEnabled ? memoryModule.buildSessionMessages(currentDomain) : [];
 
+      // Check for per-coach model override
+      const modelOverride = freshSettings.coach_settings[coach.id]?.model_override || '';
+
       // Send to background for API call
       let response;
       try {
@@ -50,7 +53,8 @@
           type: 'analyze',
           systemPrompt,
           userText: text,
-          sessionMessages
+          sessionMessages,
+          modelOverride
         });
       } catch (err) {
         throw new Error('Failed to reach Thinkmate. Try reloading the page.');

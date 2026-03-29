@@ -106,11 +106,26 @@ async function callOllama({ baseUrl, model, systemPrompt, userText, sessionMessa
 
   const body = { model, messages, stream: false };
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
+  // 120s timeout — local models can be slow to load + generate
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 120000);
+
+  let res;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal
+    });
+  } catch (err) {
+    clearTimeout(timeout);
+    if (err.name === 'AbortError') {
+      throw new Error('Ollama request timed out (120s). Try a smaller model.');
+    }
+    throw new Error(`Cannot reach Ollama at ${baseUrl}. Is it running?`);
+  }
+  clearTimeout(timeout);
 
   if (!res.ok) {
     throw new Error(`Ollama error: ${res.status}. Check OLLAMA_ORIGINS setting.`);
