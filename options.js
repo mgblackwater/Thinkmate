@@ -50,7 +50,17 @@ async function init() {
   loadModels(currentSettings.provider);
   renderCoachList();
   loadProfile();
-  renderInsights();
+
+  // Memory toggles
+  const memOn = currentSettings.memory_enabled === true;
+  const cloudOn = currentSettings.cloud_memory_enabled === true;
+  toggleMemory.checked = memOn;
+  toggleCloud.checked = cloudOn;
+  supabaseUrl.value = currentSettings.supabase_url || '';
+  supabaseKey.value = currentSettings.supabase_anon_key || '';
+  updateMemoryUI(memOn, cloudOn);
+
+  if (memOn) renderInsights();
 }
 
 // --- Profile ---
@@ -155,6 +165,40 @@ ollamaUrl.addEventListener('change', () => {
 ollamaModel.addEventListener('change', () => save({ ollama_model: ollamaModel.value }));
 panelPosition.addEventListener('change', () => save({ panel_position: panelPosition.value }));
 themeSelect.addEventListener('change', () => save({ theme: themeSelect.value }));
+
+// --- Memory & Privacy Toggles ---
+const toggleMemory = document.getElementById('toggle-memory');
+const toggleCloud = document.getElementById('toggle-cloud');
+const cloudSection = document.getElementById('cloud-memory-section');
+const supabaseFields = document.getElementById('supabase-fields');
+const insightsSection = document.getElementById('insights-section');
+const supabaseUrl = document.getElementById('supabase-url');
+const supabaseKey = document.getElementById('supabase-key');
+
+function updateMemoryUI(memoryOn, cloudOn) {
+  cloudSection.classList.toggle('hidden', !memoryOn);
+  insightsSection.style.display = memoryOn ? '' : 'none';
+  supabaseFields.classList.toggle('hidden', !cloudOn);
+}
+
+toggleMemory.addEventListener('change', () => {
+  const on = toggleMemory.checked;
+  save({ memory_enabled: on });
+  if (!on) {
+    toggleCloud.checked = false;
+    save({ cloud_memory_enabled: false });
+  }
+  updateMemoryUI(on, toggleCloud.checked);
+});
+
+toggleCloud.addEventListener('change', () => {
+  const on = toggleCloud.checked;
+  save({ cloud_memory_enabled: on });
+  supabaseFields.classList.toggle('hidden', !on);
+});
+
+supabaseUrl.addEventListener('change', () => save({ supabase_url: supabaseUrl.value }));
+supabaseKey.addEventListener('change', () => save({ supabase_anon_key: supabaseKey.value }));
 
 // --- Coach List ---
 function renderCoachList() {

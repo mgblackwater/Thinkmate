@@ -156,32 +156,35 @@ export class Panel {
       this.panel.style.top = 'auto';
       this.panel.style.left = 'auto';
     } else {
-      // Position relative to the source input element
-      const sourceRect = this.sourceElement?.getBoundingClientRect();
-      const anchor = sourceRect || this.trigger.getBoundingClientRect();
-
-      // Try to place above the input if not enough space below
-      const spaceBelow = window.innerHeight - anchor.bottom;
-      const spaceAbove = anchor.top;
+      // Use trigger button as anchor — it's always visible and near the input
+      const triggerRect = this.trigger.getBoundingClientRect();
 
       let top, left;
 
-      if (spaceBelow >= panelMaxHeight || spaceBelow >= spaceAbove) {
-        // Place below the input
-        top = anchor.bottom + 4;
+      // Check space below vs above the trigger
+      const spaceBelow = window.innerHeight - triggerRect.bottom;
+      const spaceAbove = triggerRect.top;
+
+      if (spaceBelow >= 300 || spaceBelow >= spaceAbove) {
+        // Place below trigger
+        top = triggerRect.bottom + 4;
       } else {
-        // Place above the input
-        top = anchor.top - panelMaxHeight - 4;
+        // Place above trigger
+        top = triggerRect.top - Math.min(panelMaxHeight, spaceAbove - 8);
       }
 
-      // Align right edge with input right edge
-      left = anchor.right - panelWidth;
+      // Align panel's right edge near the trigger
+      left = triggerRect.right - panelWidth;
 
       // Keep in viewport
       if (left < 8) left = 8;
       if (left + panelWidth > window.innerWidth) left = window.innerWidth - panelWidth - 8;
-      if (top < 8) top = 8;
-      if (top + panelMaxHeight > window.innerHeight) top = window.innerHeight - panelMaxHeight - 8;
+      if (top < 4) top = 4;
+      if (top + panelMaxHeight > window.innerHeight) {
+        // Constrain to viewport bottom
+        top = window.innerHeight - panelMaxHeight - 4;
+        if (top < 4) top = 4;
+      }
 
       this.panel.style.top = `${top}px`;
       this.panel.style.left = `${left}px`;

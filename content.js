@@ -34,12 +34,13 @@
         ? coach.systemPrompt(coachSettings)
         : coach.systemPrompt;
 
-      // Inject memory context prefix
-      const contextPrefix = await memoryModule.buildContextPrefix();
+      // Inject memory context if enabled
+      const memEnabled = (await storageModule.get('memory_enabled')) === true;
+      const contextPrefix = memEnabled ? await memoryModule.buildContextPrefix() : '';
       const systemPrompt = contextPrefix + basePrompt;
 
       // Build session history messages
-      const sessionMessages = memoryModule.buildSessionMessages(currentDomain);
+      const sessionMessages = memEnabled ? memoryModule.buildSessionMessages(currentDomain) : [];
 
       // Send to background for API call
       let response;
@@ -71,13 +72,16 @@
         }
       }
 
-      // Update memory (async, don't block UI)
-      memoryModule.addSessionEntry(currentDomain, text, result);
-      memoryModule.updateMemory({
-        coachId: coach.id,
-        domain: currentDomain,
-        responseData: result
-      }).catch(err => console.error('[Thinkmate] Memory update failed:', err));
+      // Update memory if enabled (async, don't block UI)
+      const memoryEnabled = (await storageModule.get('memory_enabled')) === true;
+      if (memoryEnabled) {
+        memoryModule.addSessionEntry(currentDomain, text, result);
+        memoryModule.updateMemory({
+          coachId: coach.id,
+          domain: currentDomain,
+          responseData: result
+        }).catch(err => console.error('[Thinkmate] Memory update failed:', err));
+      }
 
       return result;
     },

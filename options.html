@@ -303,8 +303,61 @@
       </div>
     </div>
 
-    <!-- Full width: Insights -->
+    <!-- Full width: Privacy & Data -->
     <div class="section full-width">
+      <h2>Privacy & Data</h2>
+      <p style="font-size:13px; color:#4a5568; margin-bottom:8px; line-height:1.6;">
+        <strong>Thinkmate has no servers.</strong> Your messages are sent directly to your chosen AI provider and are never stored anywhere.
+      </p>
+      <p style="font-size:13px; color:#718096; margin-bottom:16px; line-height:1.6;">
+        Only coaching metadata is stored: error patterns, progress scores, and your profile preferences. Stored locally on your device by default.
+      </p>
+
+      <div class="subsection" style="margin-top:0; padding-top:16px; border-top:1px solid #edf2f7;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+          <div>
+            <div style="font-size:14px; font-weight:600; color:#2d3748;">Enable memory & personalization</div>
+            <div style="font-size:12px; color:#a0aec0; margin-top:2px;">When enabled, Thinkmate learns your recurring mistakes and personalizes coaching to your background and goals. Stored locally on your device.</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="toggle-memory">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div id="cloud-memory-section" class="subsection hidden">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+          <div>
+            <div style="font-size:14px; font-weight:600; color:#2d3748;">Enable cloud memory</div>
+            <div style="font-size:12px; color:#a0aec0; margin-top:2px;">Remember coaching history across devices and sessions using your own Supabase project. Your messages are never stored — only coaching patterns and preferences.</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="toggle-cloud">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div id="supabase-fields" class="hidden" style="margin-top:12px;">
+          <div class="field">
+            <label for="supabase-url">Supabase URL</label>
+            <input type="text" id="supabase-url" placeholder="https://your-project.supabase.co">
+          </div>
+          <div class="field">
+            <label for="supabase-key">Supabase Anon Key</label>
+            <input type="password" id="supabase-key" placeholder="Your anon/public key">
+          </div>
+          <a class="help-link" href="https://supabase.com/dashboard" target="_blank">How to set up your free Supabase project &rarr;</a>
+        </div>
+      </div>
+
+      <div class="btn-row" style="margin-top:20px;">
+        <button class="btn" id="btn-export">Export Data as JSON</button>
+        <button class="btn btn-danger" id="btn-clear">Clear All Data</button>
+      </div>
+    </div>
+
+    <!-- Full width: Insights (only visible when memory is on) -->
+    <div class="section full-width" id="insights-section" style="display:none;">
       <h2>Insights</h2>
 
       <div class="grid" style="gap:16px;">
@@ -324,11 +377,6 @@
           <h3 style="font-size:13px;font-weight:600;color:#4a5568;margin-bottom:10px;">Most Used Sites</h3>
           <div id="insights-sites"></div>
         </div>
-      </div>
-
-      <div class="btn-row">
-        <button class="btn" id="btn-export">Export Data as JSON</button>
-        <button class="btn btn-danger" id="btn-clear">Clear All Memory</button>
       </div>
     </div>
 

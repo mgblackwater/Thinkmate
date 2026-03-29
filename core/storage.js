@@ -18,7 +18,11 @@ const DEFAULTS = {
       english_variant: 'American'
     }
   },
-  custom_coaches: []
+  custom_coaches: [],
+  memory_enabled: false,
+  cloud_memory_enabled: false,
+  supabase_url: '',
+  supabase_anon_key: ''
 };
 
 export async function getAll() {
