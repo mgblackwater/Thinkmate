@@ -7,8 +7,6 @@ const DEFAULTS = {
   gemini_model: 'gemini-2.0-flash',
   openrouter_api_key: '',
   openrouter_model: 'meta-llama/llama-3.3-70b-instruct:free',
-  openrouter_models_cache: null,
-  openrouter_models_cache_time: 0,
   ollama_base_url: 'http://localhost:11434',
   ollama_model: '',
   panel_position: 'cursor',
@@ -58,6 +56,17 @@ export async function setCoachSetting(coachId, settingKey, value) {
   if (!settings[coachId]) settings[coachId] = {};
   settings[coachId][settingKey] = value;
   await set({ coach_settings: settings });
+}
+
+// --- Local storage (for large data like model caches) ---
+
+export async function getLocal(key, defaultValue = null) {
+  const data = await chrome.storage.local.get({ [key]: defaultValue });
+  return data[key];
+}
+
+export async function setLocal(obj) {
+  await chrome.storage.local.set(obj);
 }
 
 export { DEFAULTS };

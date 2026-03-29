@@ -65,9 +65,13 @@ async function handleFetchModels({ provider }) {
       break;
     case 'openrouter':
       apiKey = settings.openrouter_api_key;
-      // Check cache (24 hour TTL)
-      if (settings.openrouter_models_cache && Date.now() - settings.openrouter_models_cache_time < 86400000) {
-        return { models: settings.openrouter_models_cache };
+      // Check cache in local storage (24 hour TTL)
+      {
+        const cache = await storage.getLocal('openrouter_models_cache');
+        const cacheTime = await storage.getLocal('openrouter_models_cache_time', 0);
+        if (cache && Date.now() - cacheTime < 86400000) {
+          return { models: cache };
+        }
       }
       break;
     case 'ollama':
@@ -77,9 +81,9 @@ async function handleFetchModels({ provider }) {
 
   const models = await fetchModels(provider, { apiKey, baseUrl });
 
-  // Cache OpenRouter models
+  // Cache OpenRouter models in local storage (too large for sync)
   if (provider === 'openrouter') {
-    await storage.set({
+    await storage.setLocal({
       openrouter_models_cache: models,
       openrouter_models_cache_time: Date.now()
     });

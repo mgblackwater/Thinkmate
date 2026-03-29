@@ -236,7 +236,7 @@ export class Panel {
 
     const resultArea = this.panel.querySelector('[data-container="result-area"]');
     resultArea.innerHTML = '<div class="tm-loading"><div class="tm-spinner"></div>Analyzing...</div>';
-    this.panel.querySelector('[data-container="result-tabs"]').style.display = 'none';
+    this.panel.querySelector('[data-container="section-nav"]').style.display = 'none';
     this.panel.querySelector('[data-container="actions"]').style.display = 'none';
     this.panel.querySelector('[data-action="analyze"]').disabled = true;
 

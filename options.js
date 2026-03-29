@@ -106,7 +106,7 @@ geminiModel.addEventListener('change', () => save({ gemini_model: geminiModel.va
 openrouterKey.addEventListener('change', () => {
   save({ openrouter_api_key: openrouterKey.value });
   // Clear model cache and reload
-  storage.set({ openrouter_models_cache: null, openrouter_models_cache_time: 0 });
+  storage.setLocal({ openrouter_models_cache: null, openrouter_models_cache_time: 0 });
   loadModels('openrouter');
 });
 openrouterModel.addEventListener('change', () => save({ openrouter_model: openrouterModel.value }));

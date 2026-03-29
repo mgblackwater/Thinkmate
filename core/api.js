@@ -122,25 +122,28 @@ async function callOllama({ baseUrl, model, systemPrompt, userText }) {
 export async function fetchModels(provider, { apiKey, baseUrl } = {}) {
   switch (provider) {
     case 'gemini': {
-      if (!apiKey) {
-        // Fallback to common models if no API key yet
-        return [
-          { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash' },
-          { id: 'gemini-2.0-flash-lite', name: 'Gemini 2.0 Flash Lite' },
-          { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash' },
-          { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro' }
-        ];
+      const fallback = [
+        { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash' },
+        { id: 'gemini-2.0-flash-lite', name: 'Gemini 2.0 Flash Lite' },
+        { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash' },
+        { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro' }
+      ];
+      if (!apiKey) return fallback;
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+        if (!res.ok) return fallback;
+        const data = await res.json();
+        const models = (data.models || [])
+          .filter(m => m.supportedGenerationMethods?.includes('generateContent'))
+          .map(m => ({
+            id: m.name.replace('models/', ''),
+            name: m.displayName || m.name.replace('models/', '')
+          }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+        return models.length > 0 ? models : fallback;
+      } catch {
+        return fallback;
       }
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-      if (!res.ok) throw new Error(`Failed to fetch Gemini models: ${res.status}`);
-      const data = await res.json();
-      return (data.models || [])
-        .filter(m => m.supportedGenerationMethods?.includes('generateContent'))
-        .map(m => ({
-          id: m.name.replace('models/', ''),
-          name: m.displayName || m.name.replace('models/', '')
-        }))
-        .sort((a, b) => a.name.localeCompare(b.name));
     }
 
     case 'openrouter': {
