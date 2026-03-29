@@ -2,10 +2,11 @@
 // Panel rendering engine — builds UI from coach outputSchema
 
 export class Panel {
-  constructor({ coaches, onAnalyze, onApply, panelPosition }) {
+  constructor({ coaches, onAnalyze, onApply, onGetModelName, panelPosition }) {
     this.coaches = coaches;
     this.onAnalyze = onAnalyze;
     this.onApply = onApply;
+    this.onGetModelName = onGetModelName;
     this.panelPosition = panelPosition || 'anchored';
     this.activeCoachId = coaches[0]?.id || null;
     this.activeTabKey = null;
@@ -98,6 +99,7 @@ export class Panel {
     return `
       <div class="tm-header">
         <span class="tm-brand">Thinkmate</span>
+        <span class="tm-model-label" data-display="model-name"></span>
         <button class="tm-close" data-action="close">&times;</button>
       </div>
       <div class="tm-coach-tabs">${coachTabs}</div>
@@ -125,6 +127,7 @@ export class Panel {
     const textarea = this.panel.querySelector('[data-input="text"]');
     textarea.value = text || '';
     this._updateCharCount(text || '');
+    this._updateModelLabel();
     this._clearResult();
 
     this._positionPanel();
@@ -222,6 +225,17 @@ export class Panel {
     el.textContent = `${text.length} chars / ${words} words`;
   }
 
+  async _updateModelLabel() {
+    const el = this.panel.querySelector('[data-display="model-name"]');
+    if (!el || !this.onGetModelName) return;
+    try {
+      const name = await this.onGetModelName(this.activeCoachId);
+      el.textContent = name || '';
+    } catch {
+      el.textContent = '';
+    }
+  }
+
   // --- Coach Switching ---
 
   _switchCoach(coachId) {
@@ -230,6 +244,7 @@ export class Panel {
       tab.classList.toggle('tm-active', tab.dataset.coachId === coachId);
     });
     this._clearResult();
+    this._updateModelLabel();
   }
 
   // --- Analysis ---

@@ -26,6 +26,15 @@
   const panel = new Panel({
     coaches: enabledCoaches,
     panelPosition: settings.panel_position,
+    onGetModelName: async (coachId) => {
+      const s = await storageModule.getAll();
+      const override = s.coach_settings[coachId]?.model_override;
+      const modelStr = override || s.default_model || '';
+      if (!modelStr) return '';
+      const [provider, ...parts] = modelStr.split(':');
+      const model = parts.join(':');
+      return `${model} (${provider})`;
+    },
     onAnalyze: async (coach, text) => {
       // Read fresh settings
       const freshSettings = await storageModule.getAll();
