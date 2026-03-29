@@ -37,8 +37,9 @@ export class Detector {
     clearTimeout(this.debounceTimer);
     this.debounceTimer = setTimeout(() => {
       this.activeElement = el;
-      const rect = el.getBoundingClientRect();
-      this.onActivate(el, rect);
+      const caretRect = this.getCaretRect(el);
+      const elRect = el.getBoundingClientRect();
+      this.onActivate(el, elRect, caretRect);
     }, 500);
   }
 

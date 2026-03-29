@@ -48,19 +48,26 @@ export class Panel {
     this.shadow.appendChild(this.trigger);
   }
 
-  showTrigger(rect) {
+  showTrigger(elRect, caretRect) {
     if (this.panelPosition === 'toolbar') return;
+
+    // In cursor mode, position near the caret; otherwise near the input field
+    const rect = (this.panelPosition === 'cursor' && caretRect) ? caretRect : elRect;
+
+    // Store caretRect for panel positioning later
+    this.caretRect = caretRect || elRect;
+
     this.trigger.style.display = 'flex';
-    this.trigger.style.top = `${rect.top + window.scrollY - 40}px`;
-    this.trigger.style.left = `${rect.right + window.scrollX + 8}px`;
+    this.trigger.style.top = `${rect.bottom + window.scrollY + 4}px`;
+    this.trigger.style.left = `${rect.left + window.scrollX}px`;
 
     // Keep within viewport
-    const triggerRect = this.trigger.getBoundingClientRect();
-    if (triggerRect.right > window.innerWidth) {
-      this.trigger.style.left = `${rect.left + window.scrollX - 44}px`;
+    const triggerBounds = this.trigger.getBoundingClientRect();
+    if (triggerBounds.right > window.innerWidth) {
+      this.trigger.style.left = `${window.innerWidth - 44}px`;
     }
-    if (triggerRect.top < 0) {
-      this.trigger.style.top = `${rect.bottom + window.scrollY + 4}px`;
+    if (triggerBounds.bottom > window.innerHeight) {
+      this.trigger.style.top = `${rect.top + window.scrollY - 40}px`;
     }
   }
 

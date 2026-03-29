@@ -65,8 +65,8 @@
 
   // --- Detector setup ---
   const detector = new Detector({
-    onActivate: (el, rect) => {
-      panel.showTrigger(rect);
+    onActivate: (el, elRect, caretRect) => {
+      panel.showTrigger(elRect, caretRect);
       panel.sourceElement = el;
     },
     onDeactivate: () => {
