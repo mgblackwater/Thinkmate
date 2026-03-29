@@ -11,7 +11,7 @@ const DEFAULTS = {
   openrouter_models_cache_time: 0,
   ollama_base_url: 'http://localhost:11434',
   ollama_model: '',
-  panel_position: 'anchored',
+  panel_position: 'cursor',
   coaches_enabled: { 'english-coach': true },
   coach_settings: {
     'english-coach': {

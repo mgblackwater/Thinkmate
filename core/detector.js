@@ -66,6 +66,26 @@ export class Detector {
     return el.value || '';
   }
 
+  getCaretRect(el) {
+    if (!el) return null;
+
+    // For contenteditable, use selection API
+    if (el.isContentEditable) {
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+        const rects = range.getClientRects();
+        if (rects.length > 0) {
+          return rects[rects.length - 1];
+        }
+      }
+    }
+
+    // For input/textarea, approximate from element position
+    // (no reliable way to get exact caret pixel position in standard inputs)
+    return el.getBoundingClientRect();
+  }
+
   applyText(el, text) {
     if (!el) throw new Error('No element to apply to');
 

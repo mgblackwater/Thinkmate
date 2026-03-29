@@ -99,7 +99,7 @@ export class Panel {
           <button class="tm-analyze-btn" data-action="analyze">Analyze</button>
         </div>
       </div>
-      <div class="tm-result-tabs" data-container="result-tabs" style="display:none;"></div>
+      <div class="tm-section-nav" data-container="section-nav" style="display:none;"></div>
       <div class="tm-result-area" data-container="result-area"></div>
       <div class="tm-actions" data-container="actions" style="display:none;">
         <button class="tm-action-btn" data-action="copy">Copy</button>
@@ -110,8 +110,9 @@ export class Panel {
 
   // --- Show / Hide / Toggle ---
 
-  show(sourceElement, text) {
+  show(sourceElement, text, caretRect) {
     this.sourceElement = sourceElement;
+    this.caretRect = caretRect || null;
     const textarea = this.panel.querySelector('[data-input="text"]');
     textarea.value = text || '';
     this._updateCharCount(text || '');
@@ -128,20 +129,38 @@ export class Panel {
     this.isVisible = false;
   }
 
-  toggle(sourceElement, text) {
+  toggle(sourceElement, text, caretRect) {
     if (this.isVisible) {
       this.hide();
     } else {
-      this.show(sourceElement, text);
+      this.show(sourceElement, text, caretRect);
     }
   }
 
   _positionPanel() {
+    const panelWidth = 520;
+    const panelMaxHeight = 620;
+
     if (this.panelPosition === 'fixed' || this.panelPosition === 'toolbar') {
       this.panel.style.bottom = '20px';
       this.panel.style.right = '20px';
       this.panel.style.top = 'auto';
       this.panel.style.left = 'auto';
+    } else if (this.panelPosition === 'cursor' && this.caretRect) {
+      // Position near cursor/caret
+      let top = this.caretRect.bottom + 8;
+      let left = this.caretRect.left;
+
+      // Keep in viewport
+      if (left < 8) left = 8;
+      if (left + panelWidth > window.innerWidth) left = window.innerWidth - panelWidth - 8;
+      if (top + panelMaxHeight > window.innerHeight) top = this.caretRect.top - panelMaxHeight - 8;
+      if (top < 8) top = 8;
+
+      this.panel.style.top = `${top}px`;
+      this.panel.style.left = `${left}px`;
+      this.panel.style.bottom = 'auto';
+      this.panel.style.right = 'auto';
     } else {
       // Anchored near trigger
       const triggerRect = this.trigger.getBoundingClientRect();
@@ -150,8 +169,8 @@ export class Panel {
 
       // Keep in viewport
       if (left < 8) left = 8;
-      if (left + 420 > window.innerWidth) left = window.innerWidth - 428;
-      if (top + 520 > window.innerHeight) top = triggerRect.top - 528;
+      if (left + panelWidth > window.innerWidth) left = window.innerWidth - panelWidth - 8;
+      if (top + panelMaxHeight > window.innerHeight) top = triggerRect.top - panelMaxHeight - 8;
 
       this.panel.style.top = `${top}px`;
       this.panel.style.left = `${left}px`;
@@ -165,7 +184,7 @@ export class Panel {
   _handleClick(e) {
     const action = e.target.closest('[data-action]')?.dataset.action;
     const coachId = e.target.closest('[data-coach-id]')?.dataset.coachId;
-    const tabKey = e.target.closest('[data-tab-key]')?.dataset.tabKey;
+    const anchorKey = e.target.closest('[data-anchor]')?.dataset.anchor;
 
     if (action === 'close') this.hide();
     if (action === 'analyze') this._analyze();
@@ -174,7 +193,7 @@ export class Panel {
     if (action === 'retry') this._analyze();
     if (action === 'open-options') chrome.runtime.sendMessage({ type: 'open-options' });
     if (coachId) this._switchCoach(coachId);
-    if (tabKey) this._switchResultTab(tabKey);
+    if (anchorKey) this._scrollToSection(anchorKey);
   }
 
   _handleInput(e) {
@@ -237,82 +256,85 @@ export class Panel {
     }
   }
 
-  // --- Result Rendering ---
+  // --- Result Rendering (scrollable sections) ---
 
   _renderResult(coach, data) {
     const tabs = coach.outputSchema.tabs;
-    const tabsContainer = this.panel.querySelector('[data-container="result-tabs"]');
+    const navContainer = this.panel.querySelector('[data-container="section-nav"]');
     const resultArea = this.panel.querySelector('[data-container="result-area"]');
     const actionsContainer = this.panel.querySelector('[data-container="actions"]');
 
     // Check for is_perfect flag
     if (data.is_perfect) {
-      tabsContainer.style.display = 'none';
+      navContainer.style.display = 'none';
       actionsContainer.style.display = 'none';
       resultArea.innerHTML = '<div class="tm-perfect">Your text is perfect! No corrections needed.</div>';
       return;
     }
 
-    // Build result tabs
-    const firstNonEmptyTab = tabs.find(t => {
+    // Filter to non-empty sections
+    const nonEmptyTabs = tabs.filter(t => {
       const val = data[t.key];
       return val && (!Array.isArray(val) || val.length > 0);
     });
-    this.activeTabKey = firstNonEmptyTab?.key || tabs[0].key;
 
-    tabsContainer.innerHTML = tabs.map(t => {
-      const val = data[t.key];
-      const isEmpty = !val || (Array.isArray(val) && val.length === 0);
-      return `<button class="tm-result-tab ${t.key === this.activeTabKey ? 'tm-active' : ''}" data-tab-key="${t.key}" ${isEmpty ? 'style="opacity:0.4"' : ''}>${t.label}</button>`;
-    }).join('');
-    tabsContainer.style.display = 'flex';
+    // Build anchor nav
+    navContainer.innerHTML = nonEmptyTabs.map(t =>
+      `<button class="tm-nav-link" data-anchor="${t.key}">${t.label}</button>`
+    ).join('');
+    navContainer.style.display = nonEmptyTabs.length > 1 ? 'flex' : 'none';
 
-    this._renderTabContent(coach, data);
+    // Build all sections as one scrollable page
+    let sectionsHtml = '';
+    for (const tab of tabs) {
+      const value = data[tab.key];
+      const isEmpty = !value || (Array.isArray(value) && value.length === 0);
+      if (isEmpty) continue;
+
+      sectionsHtml += `<div class="tm-section" id="tm-section-${tab.key}">`;
+      sectionsHtml += `<div class="tm-section-header">${tab.label}</div>`;
+      sectionsHtml += this._renderSectionContent(tab, value);
+      sectionsHtml += `</div>`;
+    }
+
+    resultArea.innerHTML = sectionsHtml;
     actionsContainer.style.display = 'flex';
   }
 
-  _switchResultTab(tabKey) {
-    this.activeTabKey = tabKey;
-    this.panel.querySelectorAll('.tm-result-tab').forEach(tab => {
-      tab.classList.toggle('tm-active', tab.dataset.tabKey === tabKey);
-    });
-    const coach = this.coaches.find(c => c.id === this.activeCoachId);
-    if (coach && this.resultData) {
-      this._renderTabContent(coach, this.resultData);
+  _scrollToSection(key) {
+    const section = this.panel.querySelector(`#tm-section-${key}`);
+    const resultArea = this.panel.querySelector('[data-container="result-area"]');
+    if (section && resultArea) {
+      resultArea.scrollTo({
+        top: section.offsetTop - resultArea.offsetTop,
+        behavior: 'smooth'
+      });
     }
+
+    // Highlight active nav link
+    this.panel.querySelectorAll('.tm-nav-link').forEach(link => {
+      link.classList.toggle('tm-active', link.dataset.anchor === key);
+    });
   }
 
-  _renderTabContent(coach, data) {
-    const tab = coach.outputSchema.tabs.find(t => t.key === this.activeTabKey);
-    const resultArea = this.panel.querySelector('[data-container="result-area"]');
-    const value = data[this.activeTabKey];
-
-    if (!value || (Array.isArray(value) && value.length === 0)) {
-      resultArea.innerHTML = '<div class="tm-empty-tab">Nothing to flag here!</div>';
-      return;
-    }
-
+  _renderSectionContent(tab, value) {
     switch (tab.type) {
       case 'text':
-        resultArea.innerHTML = `<div class="tm-result-text">${this._escapeHtml(value)}</div>`;
-        break;
+        return `<div class="tm-result-text">${this._escapeHtml(value)}</div>`;
 
       case 'list-of-cards':
-        resultArea.innerHTML = value.map(item => this._renderCard(item, tab.fields)).join('');
-        break;
+        return value.map(item => this._renderCard(item, tab.fields)).join('');
 
       case 'pronunciation-cards':
-        resultArea.innerHTML = value.map(item => this._renderPronunciationCard(item)).join('');
-        break;
+        return value.map(item => this._renderPronunciationCard(item)).join('');
 
       case 'list':
-        resultArea.innerHTML = value.map(item =>
+        return value.map(item =>
           `<div class="tm-card"><div class="tm-card-value">${this._escapeHtml(item)}</div></div>`
         ).join('');
-        break;
 
       default:
-        resultArea.innerHTML = `<div class="tm-result-text">${this._escapeHtml(JSON.stringify(value, null, 2))}</div>`;
+        return `<div class="tm-result-text">${this._escapeHtml(JSON.stringify(value, null, 2))}</div>`;
     }
   }
 
@@ -410,8 +432,7 @@ export class Panel {
 
   _clearResult() {
     this.resultData = null;
-    this.activeTabKey = null;
-    this.panel.querySelector('[data-container="result-tabs"]').style.display = 'none';
+    this.panel.querySelector('[data-container="section-nav"]').style.display = 'none';
     this.panel.querySelector('[data-container="result-area"]').innerHTML = '';
     this.panel.querySelector('[data-container="actions"]').style.display = 'none';
   }

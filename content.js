@@ -73,10 +73,11 @@
   panel.toggle = () => {
     const el = detector.activeElement;
     const text = el ? detector.getText(el) : '';
+    const caretRect = el ? detector.getCaretRect(el) : null;
     if (panel.isVisible) {
       panel.hide();
     } else {
-      panel.show(el, text);
+      panel.show(el, text, caretRect);
     }
   };
 
@@ -85,10 +86,11 @@
     if (message.type === 'toggle-panel') {
       const el = detector.activeElement || document.activeElement;
       const text = detector.getText(el);
+      const caretRect = detector.getCaretRect(el);
       if (panel.isVisible) {
         panel.hide();
       } else {
-        panel.show(el, text);
+        panel.show(el, text, caretRect);
       }
     }
   });

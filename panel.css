@@ -45,8 +45,8 @@
 .tm-panel {
   position: fixed;
   z-index: 2147483647;
-  width: 420px;
-  max-height: 520px;
+  width: 520px;
+  max-height: 620px;
   background: #1a1a2e;
   border: 1px solid #2a2a4a;
   border-radius: 12px;
@@ -200,33 +200,61 @@
   background: rgba(0, 212, 170, 0.1);
 }
 
-/* --- Result Tabs --- */
+/* --- Section Nav (anchor links) --- */
 
-.tm-result-tabs {
+.tm-section-nav {
   display: flex;
-  gap: 2px;
-  padding: 8px 16px 0;
+  gap: 4px;
+  padding: 6px 16px;
+  border-bottom: 1px solid #2a2a4a;
   flex-shrink: 0;
+  overflow-x: auto;
 }
 
-.tm-result-tab {
+.tm-nav-link {
   background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
+  border: 1px solid #2a2a4a;
+  border-radius: 12px;
   color: #888;
-  font-size: 12px;
-  padding: 6px 10px;
+  font-size: 11px;
+  padding: 3px 10px;
   cursor: pointer;
+  white-space: nowrap;
   transition: all 0.15s ease;
 }
 
-.tm-result-tab:hover {
+.tm-nav-link:hover {
   color: #e0e0e0;
+  border-color: #3a3a5a;
 }
 
-.tm-result-tab.tm-active {
+.tm-nav-link.tm-active {
   color: #00d4aa;
-  border-bottom-color: #00d4aa;
+  border-color: #00d4aa;
+  background: rgba(0, 212, 170, 0.1);
+}
+
+/* --- Sections --- */
+
+.tm-section {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #1f1f3a;
+}
+
+.tm-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.tm-section-header {
+  font-size: 12px;
+  font-weight: 600;
+  color: #00d4aa;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 10px;
+  padding-bottom: 4px;
 }
 
 /* --- Result Content --- */
