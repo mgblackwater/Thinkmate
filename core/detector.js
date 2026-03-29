@@ -92,35 +92,24 @@ export class Detector {
     if (el.isContentEditable) {
       el.focus();
 
-      // Select all existing content
-      const selection = window.getSelection();
-      const range = document.createRange();
-      range.selectNodeContents(el);
-      selection.removeAllRanges();
-      selection.addRange(range);
+      // Clear existing content
+      el.textContent = '';
 
-      // Delete existing content first
-      document.execCommand('delete', false, null);
+      // Dispatch events so React/frameworks notice the clear
+      el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'deleteContentBackward' }));
 
-      // Method 1: InputEvent with insertText (works on WhatsApp/React apps)
-      const inputEvent = new InputEvent('beforeinput', {
-        inputType: 'insertText',
-        data: text,
-        bubbles: true,
-        cancelable: true,
-        composed: true
-      });
-      const handled = !el.dispatchEvent(inputEvent);
+      // Small delay to let framework process the clear
+      setTimeout(() => {
+        el.focus();
 
-      if (!handled) {
-        // Method 2: execCommand
+        // Try execCommand insertText
         if (!document.execCommand('insertText', false, text)) {
-          // Method 3: direct DOM manipulation
+          // Fallback: set textContent directly
           el.textContent = text;
         }
-      }
 
-      this._dispatchInputEvents(el);
+        this._dispatchInputEvents(el);
+      }, 50);
     } else {
       el.focus();
 
