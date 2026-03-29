@@ -148,14 +148,6 @@
       openPanel();
     }
     if (message.type === 'analyze-selection' && message.text) {
-      // Restore the selection highlight
-      if (lastSelectionRange) {
-        try {
-          const sel = window.getSelection();
-          sel.removeAllRanges();
-          sel.addRange(lastSelectionRange);
-        } catch { /* ignore */ }
-      }
       panel.show(null, message.text, lastSelectionRect);
     }
     if (message.type === 'quick-correct') {
