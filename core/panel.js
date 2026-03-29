@@ -178,14 +178,18 @@ export class Panel {
       this.panel.style.right = 'auto';
 
       if (spaceBelow >= panelMaxHeight) {
-        // Enough room below — place below trigger
+        // Enough room below
         this.panel.style.top = `${triggerRect.bottom + 4}px`;
         this.panel.style.bottom = 'auto';
-      } else {
-        // Not enough below — anchor to bottom of trigger using CSS bottom
+      } else if (spaceAbove >= panelMaxHeight) {
+        // Enough room above
         const bottomOffset = window.innerHeight - triggerRect.top + 4;
         this.panel.style.bottom = `${bottomOffset}px`;
         this.panel.style.top = 'auto';
+      } else {
+        // Not enough room either way — pin to top of viewport
+        this.panel.style.top = '4px';
+        this.panel.style.bottom = 'auto';
       }
     }
   }
