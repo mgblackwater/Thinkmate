@@ -223,13 +223,13 @@
         </div>
 
         <div id="ollama-fields" class="hidden">
-          <div style="padding:8px 12px; border-radius:6px; font-size:12px; background:#fffff0; border:1px solid #fefcbf; color:#744210; margin-bottom:12px;">
-            Requires <strong>OLLAMA_ORIGINS=*</strong> environment variable. Set it and restart Ollama to allow Chrome extensions.
+          <div style="padding:10px 12px; border-radius:6px; font-size:12px; background:#fffff0; border:1px solid #fefcbf; color:#744210; margin-bottom:12px; line-height:1.6;">
+            Ollama requires <strong>OLLAMA_ORIGINS=*</strong> to work with Chrome extensions.<br>
+            <code style="font-size:11px; background:#fefcbf; padding:2px 6px; border-radius:3px;">set OLLAMA_ORIGINS=* && ollama serve</code>
           </div>
           <div class="field">
             <label for="ollama-url">Base URL</label>
             <input type="text" id="ollama-url" placeholder="http://localhost:11434">
-            <div id="provider-status-ollama" style="display:none; margin-top:8px; padding:8px 12px; border-radius:6px; font-size:12px;"></div>
           </div>
           <div class="field">
             <label for="ollama-model">Model</label>

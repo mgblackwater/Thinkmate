@@ -113,10 +113,7 @@ async function callOllama({ baseUrl, model, systemPrompt, userText, sessionMessa
   });
 
   if (!res.ok) {
-    if (res.status === 403) {
-      throw new Error(`Ollama blocked the request (403). Set OLLAMA_ORIGINS=* and restart Ollama to allow Chrome extensions.`);
-    }
-    throw new Error(`Ollama error: ${res.status}. Is Ollama running at ${baseUrl}?`);
+    throw new Error(`Ollama error: ${res.status}. Check OLLAMA_ORIGINS setting.`);
   }
 
   const data = await res.json();
