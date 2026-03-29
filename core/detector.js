@@ -92,24 +92,13 @@ export class Detector {
     if (el.isContentEditable) {
       el.focus();
 
-      // Clear existing content
-      el.textContent = '';
+      // Use Ctrl+A equivalent to select all content
+      document.execCommand('selectAll', false, null);
 
-      // Dispatch events so React/frameworks notice the clear
-      el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'deleteContentBackward' }));
+      // insertText replaces the current selection
+      document.execCommand('insertText', false, text);
 
-      // Small delay to let framework process the clear
-      setTimeout(() => {
-        el.focus();
-
-        // Try execCommand insertText
-        if (!document.execCommand('insertText', false, text)) {
-          // Fallback: set textContent directly
-          el.textContent = text;
-        }
-
-        this._dispatchInputEvents(el);
-      }, 50);
+      this._dispatchInputEvents(el);
     } else {
       el.focus();
 
