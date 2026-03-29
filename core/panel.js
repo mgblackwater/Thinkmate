@@ -226,8 +226,8 @@ export class Panel {
     // Track pending changes so re-render uses fresh values
     if (!this._pendingSettings) this._pendingSettings = {};
     this._pendingSettings[key] = e.target.value;
-    // Re-render to handle showWhen dependencies
-    if (e.target.tagName === 'SELECT') {
+    // Re-render only for non-model selects (to handle showWhen dependencies)
+    if (e.target.tagName === 'SELECT' && key !== 'model_override') {
       this._renderSettingsBar();
     }
   }
@@ -237,9 +237,10 @@ export class Panel {
     if (!bar || !this.onGetSettings) return;
 
     try {
-      const { coachSettings: storedSettings, modelName, models, currentModel } = await this.onGetSettings(this.activeCoachId);
+      const { coachSettings: storedSettings, modelName, models, currentModel: storedModel } = await this.onGetSettings(this.activeCoachId);
       // Merge any pending (unsaved) changes on top of stored settings
       const coachSettings = { ...storedSettings, ...this._pendingSettings };
+      const currentModel = this._pendingSettings?.model_override ?? storedModel;
       const coach = this.coaches.find(c => c.id === this.activeCoachId);
 
       let html = '';
