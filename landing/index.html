@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thinkmate - Your Thinking Partner</title>
+  <meta name="description" content="AI coaching layer for your browser. Coaches the thinking behind your words, not just grammar. Works on any website.">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f7fafc; color: #2d3748; line-height: 1.6; }
+
+    .hero { text-align: center; padding: 80px 24px 60px; background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%); }
+    .hero h1 { font-size: 48px; font-weight: 800; margin-bottom: 16px; }
+    .hero h1 span { color: #6c63ff; }
+    .hero p { font-size: 20px; color: #718096; max-width: 600px; margin: 0 auto 32px; }
+    .cta { display: inline-block; background: #6c63ff; color: #fff; padding: 14px 32px; border-radius: 8px; font-size: 16px; font-weight: 600; text-decoration: none; transition: background 0.2s; }
+    .cta:hover { background: #5a52e0; }
+    .cta-secondary { display: inline-block; color: #6c63ff; padding: 14px 24px; font-size: 16px; font-weight: 500; text-decoration: none; margin-left: 12px; }
+    .cta-secondary:hover { text-decoration: underline; }
+
+    .features { max-width: 960px; margin: 0 auto; padding: 60px 24px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; }
+    .feature { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 28px; }
+    .feature-icon { font-size: 32px; margin-bottom: 12px; }
+    .feature h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    .feature p { font-size: 14px; color: #718096; }
+
+    .coaches { background: #fff; padding: 60px 24px; text-align: center; }
+    .coaches h2 { font-size: 32px; font-weight: 700; margin-bottom: 12px; }
+    .coaches .subtitle { font-size: 16px; color: #718096; margin-bottom: 40px; }
+    .coach-grid { max-width: 800px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; text-align: left; }
+    .coach-card { display: flex; align-items: center; gap: 12px; padding: 16px; background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 10px; }
+    .coach-card .icon { font-size: 24px; }
+    .coach-card .name { font-size: 14px; font-weight: 600; }
+    .coach-card .desc { font-size: 12px; color: #a0aec0; }
+
+    .providers { max-width: 960px; margin: 0 auto; padding: 60px 24px; text-align: center; }
+    .providers h2 { font-size: 32px; font-weight: 700; margin-bottom: 12px; }
+    .providers .subtitle { font-size: 16px; color: #718096; margin-bottom: 40px; }
+    .provider-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+    .provider-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 28px; }
+    .provider-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    .provider-card p { font-size: 13px; color: #718096; }
+
+    .privacy { background: #f0fff4; padding: 48px 24px; text-align: center; }
+    .privacy h2 { font-size: 24px; font-weight: 700; margin-bottom: 12px; color: #276749; }
+    .privacy p { font-size: 15px; color: #4a5568; max-width: 600px; margin: 0 auto; }
+
+    .footer { text-align: center; padding: 32px 24px; color: #a0aec0; font-size: 13px; }
+    .footer a { color: #6c63ff; text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 768px) {
+      .features, .provider-grid { grid-template-columns: 1fr; }
+      .coach-grid { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 32px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <h1>✨ <span>Thinkmate</span></h1>
+    <p>Your thinking partner. AI coaching layer that lives in your browser — coaches the thinking behind your words, not just grammar.</p>
+    <a class="cta" href="#" id="chrome-link">Add to Chrome — Free</a>
+    <a class="cta-secondary" href="https://github.com/mgblackwater/Thinkmate" target="_blank">GitHub</a>
+  </div>
+
+  <div class="features">
+    <div class="feature">
+      <div class="feature-icon">🌐</div>
+      <h3>Works Everywhere</h3>
+      <p>WhatsApp Web, Gmail, LinkedIn, Twitter, Notion, Slack — any text field on any website.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🔌</div>
+      <h3>Plugin Coaches</h3>
+      <p>English, Clarity, Stoic, Debate, Scrum, Tone — pick the coach you need. Add your own.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🔒</div>
+      <h3>Private by Design</h3>
+      <p>No servers. Your messages go directly to your AI provider. Nothing is stored except coaching patterns.</p>
+    </div>
+  </div>
+
+  <div class="coaches">
+    <h2>Coaches for Every Situation</h2>
+    <p class="subtitle">Each coach is a plugin. Enable what you need, disable the rest.</p>
+    <div class="coach-grid">
+      <div class="coach-card"><span class="icon">🇬🇧</span><div><div class="name">English Coach</div><div class="desc">Grammar, vocabulary, pronunciation with Color Vowel</div></div></div>
+      <div class="coach-card"><span class="icon">💎</span><div><div class="name">Clarity Coach</div><div class="desc">Is your message clear to the reader?</div></div></div>
+      <div class="coach-card"><span class="icon">🏛️</span><div><div class="name">Stoic Coach</div><div class="desc">Reframe with Stoic philosophy</div></div></div>
+      <div class="coach-card"><span class="icon">⚖️</span><div><div class="name">Debate Coach</div><div class="desc">Steelman the other side</div></div></div>
+      <div class="coach-card"><span class="icon">🎭</span><div><div class="name">Tone Rewriter</div><div class="desc">Formal, casual, professional, friendly</div></div></div>
+      <div class="coach-card"><span class="icon">🌐</span><div><div class="name">Translator</div><div class="desc">Translate to/from any language</div></div></div>
+    </div>
+  </div>
+
+  <div class="providers">
+    <h2>Bring Your Own AI</h2>
+    <p class="subtitle">Choose your provider. Use multiple at the same time.</p>
+    <div class="provider-grid">
+      <div class="provider-card">
+        <h3>Gemini</h3>
+        <p>Free tier from Google AI Studio. Fast, no billing needed. Recommended for getting started.</p>
+      </div>
+      <div class="provider-card">
+        <h3>OpenRouter</h3>
+        <p>100+ models, you control the budget. Free models available. Pay only for what you use.</p>
+      </div>
+      <div class="provider-card">
+        <h3>Ollama</h3>
+        <p>Run models locally. Fully private, no API key needed. Your data never leaves your machine.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="privacy">
+    <h2>🔒 Thinkmate Has No Servers</h2>
+    <p>Your messages are sent directly to your chosen AI provider and are never stored anywhere. Only coaching patterns and preferences are saved — locally on your device, or optionally synced via your own Supabase project.</p>
+  </div>
+
+  <div class="footer">
+    <p>Built by <a href="https://github.com/mgblackwater">mgblackwater</a> · <a href="https://github.com/mgblackwater/Thinkmate">Source on GitHub</a></p>
+  </div>
+</body>
+</html>
