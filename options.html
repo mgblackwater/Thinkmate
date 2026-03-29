@@ -52,7 +52,7 @@
 
     label { display: block; font-size: 13px; color: #718096; margin-bottom: 6px; }
 
-    select, input[type="text"], input[type="password"], textarea {
+    select, input[type="text"], input[type="password"], input[type="email"], textarea {
       width: 100%;
       padding: 10px 12px;
       background: #f7fafc;
@@ -162,6 +162,18 @@
 
     .shortcut-hint { font-size: 12px; color: #a0aec0; margin-top: 8px; }
     .kbd { display: inline-block; background: #edf2f7; border: 1px solid #e2e8f0; border-radius: 4px; padding: 1px 6px; font-size: 11px; font-family: monospace; color: #4a5568; }
+
+    /* Sync */
+    .sync-status {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 8px;
+      font-size: 13px; margin-bottom: 16px;
+    }
+    .sync-status .dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+    .sync-status .dot.green { background: #38a169; }
+    .sync-status .dot.gray { background: #a0aec0; }
   </style>
 </head>
 <body>
@@ -252,7 +264,7 @@
       </div>
     </div>
 
-    <!-- Column 3: Profile -->
+    <!-- Column 3: Profile + Cloud Sync -->
     <div>
       <div class="section">
         <h2>Your Profile</h2>
@@ -301,6 +313,29 @@
           <textarea id="profile-work" placeholder="Describe your work environment"></textarea>
         </div>
       </div>
+
+      <div class="section">
+        <h2>Cloud Sync</h2>
+        <p style="font-size:13px; color:#a0aec0; margin-bottom:16px;">Connect your own Supabase project to sync profile and learned patterns across devices.</p>
+
+        <div id="sync-status" class="sync-status">
+          <span class="dot gray"></span>
+          <span id="sync-label">Not configured</span>
+        </div>
+
+        <div class="field">
+          <label for="supabase-url">Supabase Project URL</label>
+          <input type="text" id="supabase-url" placeholder="https://your-project.supabase.co">
+        </div>
+        <div class="field">
+          <label for="supabase-key">Anon Key</label>
+          <input type="password" id="supabase-key" placeholder="Your Supabase anon/public key">
+        </div>
+
+        <div class="btn-row">
+          <button class="btn" id="btn-sync-now" disabled>Sync Now</button>
+        </div>
+      </div>
     </div>
 
     <!-- Full width: Privacy & Data -->
@@ -323,30 +358,6 @@
             <input type="checkbox" id="toggle-memory">
             <span class="toggle-slider"></span>
           </label>
-        </div>
-      </div>
-
-      <div id="cloud-memory-section" class="subsection hidden">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-          <div>
-            <div style="font-size:14px; font-weight:600; color:#2d3748;">Enable cloud memory</div>
-            <div style="font-size:12px; color:#a0aec0; margin-top:2px;">Remember coaching history across devices and sessions using your own Supabase project. Your messages are never stored — only coaching patterns and preferences.</div>
-          </div>
-          <label class="toggle">
-            <input type="checkbox" id="toggle-cloud">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-        <div id="supabase-fields" class="hidden" style="margin-top:12px;">
-          <div class="field">
-            <label for="supabase-url">Supabase URL</label>
-            <input type="text" id="supabase-url" placeholder="https://your-project.supabase.co">
-          </div>
-          <div class="field">
-            <label for="supabase-key">Supabase Anon Key</label>
-            <input type="password" id="supabase-key" placeholder="Your anon/public key">
-          </div>
-          <a class="help-link" href="https://supabase.com/dashboard" target="_blank">How to set up your free Supabase project &rarr;</a>
         </div>
       </div>
 

@@ -19,10 +19,7 @@ const DEFAULTS = {
     }
   },
   custom_coaches: [],
-  memory_enabled: false,
-  cloud_memory_enabled: false,
-  supabase_url: '',
-  supabase_anon_key: ''
+  memory_enabled: false
 };
 
 export async function getAll() {

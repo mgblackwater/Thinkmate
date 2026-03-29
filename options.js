@@ -33,6 +33,13 @@ const profileFields = {
   communication_style: document.getElementById('profile-style')
 };
 
+// Sync DOM references
+const syncStatusEl = document.getElementById('sync-status');
+const syncLabel = document.getElementById('sync-label');
+const supabaseUrlInput = document.getElementById('supabase-url');
+const supabaseKeyInput = document.getElementById('supabase-key');
+const syncNowBtn = document.getElementById('btn-sync-now');
+
 let currentSettings = {};
 
 // --- Initialize ---
@@ -51,16 +58,16 @@ async function init() {
   renderCoachList();
   loadProfile();
 
-  // Memory toggles
+  // Memory toggle
   const memOn = currentSettings.memory_enabled === true;
-  const cloudOn = currentSettings.cloud_memory_enabled === true;
   toggleMemory.checked = memOn;
-  toggleCloud.checked = cloudOn;
-  supabaseUrl.value = currentSettings.supabase_url || '';
-  supabaseKey.value = currentSettings.supabase_anon_key || '';
-  updateMemoryUI(memOn, cloudOn);
+  updateMemoryUI(memOn);
 
   if (memOn) renderInsights();
+
+  // Cloud sync
+  loadSyncStatus();
+  loadSyncConfig();
 }
 
 // --- Profile ---
@@ -166,39 +173,19 @@ ollamaModel.addEventListener('change', () => save({ ollama_model: ollamaModel.va
 panelPosition.addEventListener('change', () => save({ panel_position: panelPosition.value }));
 themeSelect.addEventListener('change', () => save({ theme: themeSelect.value }));
 
-// --- Memory & Privacy Toggles ---
+// --- Memory & Privacy Toggle ---
 const toggleMemory = document.getElementById('toggle-memory');
-const toggleCloud = document.getElementById('toggle-cloud');
-const cloudSection = document.getElementById('cloud-memory-section');
-const supabaseFields = document.getElementById('supabase-fields');
 const insightsSection = document.getElementById('insights-section');
-const supabaseUrl = document.getElementById('supabase-url');
-const supabaseKey = document.getElementById('supabase-key');
 
-function updateMemoryUI(memoryOn, cloudOn) {
-  cloudSection.classList.toggle('hidden', !memoryOn);
+function updateMemoryUI(memoryOn) {
   insightsSection.style.display = memoryOn ? '' : 'none';
-  supabaseFields.classList.toggle('hidden', !cloudOn);
 }
 
 toggleMemory.addEventListener('change', () => {
   const on = toggleMemory.checked;
   save({ memory_enabled: on });
-  if (!on) {
-    toggleCloud.checked = false;
-    save({ cloud_memory_enabled: false });
-  }
-  updateMemoryUI(on, toggleCloud.checked);
+  updateMemoryUI(on);
 });
-
-toggleCloud.addEventListener('change', () => {
-  const on = toggleCloud.checked;
-  save({ cloud_memory_enabled: on });
-  supabaseFields.classList.toggle('hidden', !on);
-});
-
-supabaseUrl.addEventListener('change', () => save({ supabase_url: supabaseUrl.value }));
-supabaseKey.addEventListener('change', () => save({ supabase_anon_key: supabaseKey.value }));
 
 // --- Coach List ---
 function renderCoachList() {
@@ -366,6 +353,67 @@ function escapeHtml(str) {
   div.textContent = str;
   return div.innerHTML;
 }
+
+// --- Sync ---
+
+async function loadSyncConfig() {
+  const data = await chrome.storage.sync.get({
+    supabase_config: { url: '', anon_key: '' }
+  });
+  supabaseUrlInput.value = data.supabase_config.url || '';
+  supabaseKeyInput.value = data.supabase_config.anon_key || '';
+}
+
+function saveSyncConfig() {
+  chrome.storage.sync.set({
+    supabase_config: {
+      url: supabaseUrlInput.value.replace(/\/$/, ''),
+      anon_key: supabaseKeyInput.value
+    }
+  });
+  loadSyncStatus();
+  showStatus();
+}
+
+supabaseUrlInput.addEventListener('change', saveSyncConfig);
+supabaseKeyInput.addEventListener('change', saveSyncConfig);
+
+async function loadSyncStatus() {
+  try {
+    const result = await chrome.runtime.sendMessage({ type: 'sync-status' });
+    const dot = syncStatusEl.querySelector('.dot');
+
+    if (result.status === 'ready') {
+      dot.className = 'dot green';
+      syncLabel.textContent = 'Connected';
+      syncNowBtn.disabled = false;
+    } else {
+      dot.className = 'dot gray';
+      syncLabel.textContent = 'Not configured';
+      syncNowBtn.disabled = true;
+    }
+  } catch {
+    syncNowBtn.disabled = true;
+  }
+}
+
+syncNowBtn.addEventListener('click', async () => {
+  syncNowBtn.disabled = true;
+  syncNowBtn.textContent = 'Syncing...';
+
+  try {
+    const result = await chrome.runtime.sendMessage({ type: 'sync-now' });
+    if (result.error) throw new Error(result.error);
+    renderInsights();
+    loadProfile();
+    showStatus();
+  } catch (err) {
+    alert(`Sync failed: ${err.message}`);
+  } finally {
+    syncNowBtn.disabled = false;
+    syncNowBtn.textContent = 'Sync Now';
+  }
+});
 
 // --- Init ---
 init();
