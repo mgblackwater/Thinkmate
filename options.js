@@ -208,7 +208,10 @@ function showStatus() {
   setTimeout(() => statusMsg.classList.remove('visible'), 1500);
 }
 
-geminiKey.addEventListener('change', () => save({ gemini_api_key: geminiKey.value }));
+geminiKey.addEventListener('change', () => {
+  save({ gemini_api_key: geminiKey.value });
+  loadModels('gemini');
+});
 geminiModel.addEventListener('change', () => save({ gemini_model: geminiModel.value }));
 openrouterKey.addEventListener('change', () => {
   save({ openrouter_api_key: openrouterKey.value });
