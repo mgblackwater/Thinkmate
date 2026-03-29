@@ -60,6 +60,9 @@ async function handleFetchModels({ provider }) {
   let apiKey, baseUrl;
 
   switch (provider) {
+    case 'gemini':
+      apiKey = settings.gemini_api_key;
+      break;
     case 'openrouter':
       apiKey = settings.openrouter_api_key;
       // Check cache (24 hour TTL)
