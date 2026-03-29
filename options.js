@@ -42,6 +42,7 @@ async function init() {
 
   geminiKey.value = currentSettings.gemini_api_key;
   openrouterKey.value = currentSettings.openrouter_api_key;
+  groqKey.value = currentSettings.groq_api_key;
   ollamaUrl.value = currentSettings.ollama_base_url;
   panelPosition.value = currentSettings.panel_position;
   themeSelect.value = currentSettings.theme || 'light';
@@ -204,6 +205,11 @@ openrouterKey.addEventListener('change', () => {
 });
 ollamaUrl.addEventListener('change', () => {
   save({ ollama_base_url: ollamaUrl.value });
+  loadAllModels();
+});
+const groqKey = document.getElementById('groq-key');
+groqKey.addEventListener('change', () => {
+  save({ groq_api_key: groqKey.value });
   loadAllModels();
 });
 defaultModelSelect.addEventListener('change', () => save({ default_model: defaultModelSelect.value }));

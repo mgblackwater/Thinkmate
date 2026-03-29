@@ -55,6 +55,10 @@ async function handleAnalyze({ systemPrompt, userText, sessionMessages, modelOve
       apiKey = settings.openrouter_api_key;
       if (!apiKey) throw new Error('NO_API_KEY');
       break;
+    case 'groq':
+      apiKey = settings.groq_api_key;
+      if (!apiKey) throw new Error('NO_API_KEY');
+      break;
     case 'ollama':
       baseUrl = settings.ollama_base_url;
       break;
@@ -76,6 +80,14 @@ async function handleFetchModels({ provider }) {
       try {
         const models = await fetchModels('gemini', { apiKey: settings.gemini_api_key });
         allModels.push(...models.map(m => ({ ...m, provider: 'gemini', providerName: 'Gemini' })));
+      } catch { /* skip */ }
+    }
+
+    // Groq
+    if (settings.groq_api_key) {
+      try {
+        const models = await fetchModels('groq', { apiKey: settings.groq_api_key });
+        allModels.push(...models.map(m => ({ ...m, provider: 'groq', providerName: 'Groq' })));
       } catch { /* skip */ }
     }
 

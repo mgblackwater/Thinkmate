@@ -7,6 +7,8 @@ export async function callProvider({ provider, apiKey, baseUrl, model, systemPro
       return callGemini({ apiKey, model, systemPrompt, userText, sessionMessages });
     case 'openrouter':
       return callOpenRouter({ apiKey, model, systemPrompt, userText, sessionMessages });
+    case 'groq':
+      return callGroq({ apiKey, model, systemPrompt, userText, sessionMessages });
     case 'ollama':
       return callOllama({ baseUrl, model, systemPrompt, userText, sessionMessages });
     default:
@@ -90,6 +92,39 @@ async function callOpenRouter({ apiKey, model, systemPrompt, userText, sessionMe
   const data = await res.json();
   const text = data.choices?.[0]?.message?.content;
   if (!text) throw new Error('Empty response from OpenRouter');
+  return { content: text };
+}
+
+// --- Groq ---
+
+async function callGroq({ apiKey, model, systemPrompt, userText, sessionMessages }) {
+  const url = 'https://api.groq.com/openai/v1/chat/completions';
+
+  const messages = [{ role: 'system', content: systemPrompt }];
+  if (sessionMessages && sessionMessages.length > 0) {
+    messages.push(...sessionMessages);
+  }
+  messages.push({ role: 'user', content: userText });
+
+  const body = { model, messages, response_format: { type: 'json_object' } };
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || `Groq API error: ${res.status}`);
+  }
+
+  const data = await res.json();
+  const text = data.choices?.[0]?.message?.content;
+  if (!text) throw new Error('Empty response from Groq');
   return { content: text };
 }
 
@@ -181,6 +216,18 @@ export async function fetchModels(provider, { apiKey, baseUrl } = {}) {
             ? `$${(parseFloat(m.pricing.prompt) * 1e6).toFixed(2)} / 1M tokens`
             : 'Free'
         }));
+    }
+
+    case 'groq': {
+      const res = await fetch('https://api.groq.com/openai/v1/models', {
+        headers: { 'Authorization': `Bearer ${apiKey}` }
+      });
+      if (!res.ok) throw new Error(`Failed to fetch Groq models: ${res.status}`);
+      const data = await res.json();
+      return (data.data || [])
+        .filter(m => m.active !== false)
+        .sort((a, b) => a.id.localeCompare(b.id))
+        .map(m => ({ id: m.id, name: m.id }));
     }
 
     case 'ollama': {

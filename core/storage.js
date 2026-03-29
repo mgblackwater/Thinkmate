@@ -5,9 +5,10 @@ const DEFAULTS = {
   provider: 'gemini',
   gemini_api_key: '',
   openrouter_api_key: '',
+  groq_api_key: '',
   ollama_base_url: 'http://localhost:11434',
   default_model: 'gemini:gemini-2.0-flash',
-  panel_position: 'cursor',
+  panel_position: 'anchored',
   theme: 'light',
   coaches_enabled: { 'english-coach': true },
   coach_settings: {
