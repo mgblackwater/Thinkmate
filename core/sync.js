@@ -38,7 +38,7 @@ export async function clearSession() {
 
 // --- Auth: Google OAuth via chrome.identity ---
 
-export async function signInWithGoogle() {
+export async function signInWithGitHub() {
   const config = await getConfig();
   if (!config.url || !config.anon_key) {
     throw new Error('SUPABASE_NOT_CONFIGURED');
@@ -48,7 +48,7 @@ export async function signInWithGoogle() {
 
   // Build Supabase OAuth URL
   const authUrl = `${config.url}/auth/v1/authorize?` + new URLSearchParams({
-    provider: 'google',
+    provider: 'github',
     redirect_to: redirectUrl
   }).toString();
 

@@ -126,7 +126,7 @@ async function handleCheckProvider() {
 // --- Sync handlers ---
 
 async function handleSyncSignIn() {
-  const session = await sync.signInWithGoogle();
+  const session = await sync.signInWithGitHub();
   // After sign-in, do a full sync to merge local + remote data
   const result = await sync.performFullSync();
   return { ok: true, user: session.user, sync: result };
