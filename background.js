@@ -28,7 +28,7 @@ async function handleMessage(message) {
   }
 }
 
-async function handleAnalyze({ systemPrompt, userText }) {
+async function handleAnalyze({ systemPrompt, userText, sessionMessages }) {
   const settings = await storage.getAll();
   const provider = settings.provider;
 
@@ -51,7 +51,7 @@ async function handleAnalyze({ systemPrompt, userText }) {
       break;
   }
 
-  const result = await callProvider({ provider, apiKey, baseUrl, model, systemPrompt, userText });
+  const result = await callProvider({ provider, apiKey, baseUrl, model, systemPrompt, userText, sessionMessages });
   return result;
 }
 

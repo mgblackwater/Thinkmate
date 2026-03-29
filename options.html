@@ -8,207 +8,189 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #0f0f23;
-      color: #e0e0e0;
+      background: #f7fafc;
+      color: #2d3748;
       padding: 40px;
       max-width: 640px;
       margin: 0 auto;
       line-height: 1.5;
     }
 
-    .header {
-      text-align: center;
-      margin-bottom: 40px;
-    }
-
-    .header h1 {
-      font-size: 28px;
-      color: #00d4aa;
-      font-weight: 700;
-      letter-spacing: 1px;
-    }
-
-    .header p {
-      color: #888;
-      font-size: 14px;
-      margin-top: 4px;
-    }
+    .header { text-align: center; margin-bottom: 40px; }
+    .header h1 { font-size: 28px; color: #6c63ff; font-weight: 700; letter-spacing: 1px; }
+    .header p { color: #a0aec0; font-size: 14px; margin-top: 4px; }
 
     .section {
-      background: #1a1a2e;
-      border: 1px solid #2a2a4a;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
       border-radius: 12px;
       padding: 24px;
       margin-bottom: 24px;
     }
 
-    .section h2 {
-      font-size: 16px;
-      font-weight: 600;
-      color: #00d4aa;
-      margin-bottom: 16px;
-    }
+    .section h2 { font-size: 16px; font-weight: 600; color: #6c63ff; margin-bottom: 16px; }
 
-    .field {
-      margin-bottom: 16px;
-    }
+    .field { margin-bottom: 16px; }
+    .field:last-child { margin-bottom: 0; }
 
-    .field:last-child {
-      margin-bottom: 0;
-    }
+    label { display: block; font-size: 13px; color: #718096; margin-bottom: 6px; }
 
-    label {
-      display: block;
-      font-size: 13px;
-      color: #aaa;
-      margin-bottom: 6px;
-    }
-
-    select, input[type="text"], input[type="password"] {
+    select, input[type="text"], input[type="password"], textarea {
       width: 100%;
       padding: 10px 12px;
-      background: #0f0f23;
-      border: 1px solid #2a2a4a;
+      background: #f7fafc;
+      border: 1px solid #e2e8f0;
       border-radius: 8px;
-      color: #e0e0e0;
+      color: #2d3748;
       font-size: 14px;
       font-family: inherit;
       outline: none;
     }
 
-    select:focus, input:focus {
-      border-color: #00d4aa;
-    }
+    textarea { min-height: 60px; resize: vertical; }
 
-    .help-link {
-      display: inline-block;
-      margin-top: 6px;
-      font-size: 12px;
-      color: #00d4aa;
-      text-decoration: none;
-    }
+    select:focus, input:focus, textarea:focus { border-color: #6c63ff; box-shadow: 0 0 0 3px rgba(108,99,255,0.1); }
 
-    .help-link:hover {
-      text-decoration: underline;
-    }
+    .help-link { display: inline-block; margin-top: 6px; font-size: 12px; color: #6c63ff; text-decoration: none; }
+    .help-link:hover { text-decoration: underline; }
 
-    .coach-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+    .coach-list { display: flex; flex-direction: column; gap: 8px; }
 
     .coach-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 12px;
-      background: #0f0f23;
-      border: 1px solid #2a2a4a;
-      border-radius: 8px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px; background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 8px;
     }
 
-    .coach-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+    .coach-info { display: flex; align-items: center; gap: 10px; }
+    .coach-icon { font-size: 20px; }
+    .coach-name { font-size: 14px; font-weight: 500; }
+    .coach-desc { font-size: 11px; color: #a0aec0; }
 
-    .coach-icon {
-      font-size: 20px;
-    }
-
-    .coach-name {
-      font-size: 14px;
-      font-weight: 500;
-    }
-
-    .coach-desc {
-      font-size: 11px;
-      color: #888;
-    }
-
-    .toggle {
-      position: relative;
-      width: 40px;
-      height: 22px;
-    }
-
-    .toggle input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
+    .toggle { position: relative; width: 40px; height: 22px; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
 
     .toggle-slider {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: #2a2a4a;
-      border-radius: 22px;
-      cursor: pointer;
-      transition: background 0.2s ease;
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: #e2e8f0; border-radius: 22px; cursor: pointer; transition: background 0.2s ease;
     }
 
     .toggle-slider::before {
-      content: '';
-      position: absolute;
-      width: 16px;
-      height: 16px;
-      left: 3px;
-      bottom: 3px;
-      background: #888;
-      border-radius: 50%;
-      transition: transform 0.2s ease, background 0.2s ease;
+      content: ''; position: absolute; width: 16px; height: 16px; left: 3px; bottom: 3px;
+      background: #a0aec0; border-radius: 50%; transition: transform 0.2s ease, background 0.2s ease;
     }
 
-    .toggle input:checked + .toggle-slider {
-      background: rgba(0, 212, 170, 0.3);
-    }
-
-    .toggle input:checked + .toggle-slider::before {
-      transform: translateX(18px);
-      background: #00d4aa;
-    }
+    .toggle input:checked + .toggle-slider { background: rgba(108, 99, 255, 0.25); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(18px); background: #6c63ff; }
 
     .coach-settings {
-      padding: 12px;
-      margin-top: 8px;
-      background: #0f0f23;
-      border: 1px solid #2a2a4a;
-      border-radius: 8px;
-      display: none;
+      padding: 12px; margin-top: 8px;
+      background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 8px; display: none;
+    }
+    .coach-settings.visible { display: block; }
+    .coach-settings .field { margin-bottom: 12px; }
+
+    .status-msg { text-align: center; font-size: 13px; color: #6c63ff; padding: 8px; opacity: 0; transition: opacity 0.3s ease; }
+    .status-msg.visible { opacity: 1; }
+
+    .hidden { display: none; }
+
+    /* Insights */
+    .insight-list { display: flex; flex-direction: column; gap: 6px; }
+
+    .insight-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px; background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px;
     }
 
-    .coach-settings.visible {
-      display: block;
+    .insight-item .pattern { flex: 1; }
+    .insight-item .count { color: #6c63ff; font-weight: 600; margin: 0 12px; font-size: 12px; }
+    .insight-item .category { color: #a0aec0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .insight-delete {
+      background: none; border: none; color: #e53e3e; cursor: pointer; font-size: 16px; padding: 0 4px;
+    }
+    .insight-delete:hover { color: #c53030; }
+
+    .insight-empty { color: #a0aec0; font-size: 13px; text-align: center; padding: 12px; }
+
+    .insight-strong {
+      display: inline-block; background: rgba(56,161,105,0.1); color: #38a169;
+      padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; margin: 2px 4px 2px 0;
     }
 
-    .coach-settings .field {
-      margin-bottom: 12px;
+    .insight-usage {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 0; font-size: 13px; border-bottom: 1px solid #edf2f7;
     }
+    .insight-usage:last-child { border-bottom: none; }
 
-    .status-msg {
-      text-align: center;
-      font-size: 13px;
-      color: #00d4aa;
-      padding: 8px;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
+    .btn-row { display: flex; gap: 8px; margin-top: 16px; }
 
-    .status-msg.visible {
-      opacity: 1;
+    .btn {
+      padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid #e2e8f0;
+      background: #edf2f7; color: #4a5568; transition: all 0.15s ease;
     }
+    .btn:hover { background: #e2e8f0; }
 
-    .hidden {
-      display: none;
-    }
+    .btn-danger { border-color: #fed7d7; background: #fff5f5; color: #c53030; }
+    .btn-danger:hover { background: #fed7d7; }
+
+    .subsection { margin-top: 20px; padding-top: 16px; border-top: 1px solid #edf2f7; }
+    .subsection h3 { font-size: 13px; font-weight: 600; color: #4a5568; margin-bottom: 10px; }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>Thinkmate</h1>
+    <h1>✨ Thinkmate</h1>
     <p>Your thinking partner</p>
+  </div>
+
+  <!-- Profile Section -->
+  <div class="section">
+    <h2>Your Profile</h2>
+    <div class="field">
+      <label for="profile-name">Name</label>
+      <input type="text" id="profile-name" placeholder="Your name">
+    </div>
+    <div class="field">
+      <label for="profile-nationality">Nationality</label>
+      <input type="text" id="profile-nationality" placeholder="e.g. Malaysian, Japanese">
+    </div>
+    <div class="field">
+      <label for="profile-language">Native Language</label>
+      <input type="text" id="profile-language" placeholder="e.g. Malay, Japanese, Arabic">
+    </div>
+    <div class="field">
+      <label for="profile-profession">Profession</label>
+      <input type="text" id="profile-profession" placeholder="e.g. Software Engineer, Doctor">
+    </div>
+    <div class="field">
+      <label for="profile-seniority">Seniority</label>
+      <select id="profile-seniority">
+        <option value="">Select...</option>
+        <option value="Junior">Junior</option>
+        <option value="Mid">Mid</option>
+        <option value="Senior">Senior</option>
+        <option value="Lead">Lead</option>
+        <option value="Manager">Manager</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="profile-goals">Current Goals</label>
+      <textarea id="profile-goals" placeholder="e.g. IELTS 8.0, Canada PR, improve business writing"></textarea>
+    </div>
+    <div class="field">
+      <label for="profile-work">Work Context</label>
+      <textarea id="profile-work" placeholder="e.g. Leading a team of 5, working on healthcare SaaS"></textarea>
+    </div>
+    <div class="field">
+      <label for="profile-style">Communication Style</label>
+      <select id="profile-style">
+        <option value="direct">Direct</option>
+        <option value="formal">Formal</option>
+        <option value="casual">Casual</option>
+      </select>
+    </div>
   </div>
 
   <!-- Provider Section -->
@@ -224,7 +206,6 @@
       </select>
     </div>
 
-    <!-- Gemini fields -->
     <div id="gemini-fields">
       <div class="field">
         <label for="gemini-key">API Key</label>
@@ -237,7 +218,6 @@
       </div>
     </div>
 
-    <!-- OpenRouter fields -->
     <div id="openrouter-fields" class="hidden">
       <div class="field">
         <label for="openrouter-key">API Key</label>
@@ -246,13 +226,10 @@
       </div>
       <div class="field">
         <label for="openrouter-model">Model</label>
-        <select id="openrouter-model">
-          <option value="">Enter API key to load models...</option>
-        </select>
+        <select id="openrouter-model"><option value="">Enter API key to load models...</option></select>
       </div>
     </div>
 
-    <!-- Ollama fields -->
     <div id="ollama-fields" class="hidden">
       <div class="field">
         <label for="ollama-url">Base URL</label>
@@ -260,9 +237,7 @@
       </div>
       <div class="field">
         <label for="ollama-model">Model</label>
-        <select id="ollama-model">
-          <option value="">Click to load models...</option>
-        </select>
+        <select id="ollama-model"><option value="">Click to load models...</option></select>
       </div>
     </div>
   </div>
@@ -285,6 +260,36 @@
   <div class="section">
     <h2>Coaches</h2>
     <div id="coach-list" class="coach-list"></div>
+  </div>
+
+  <!-- Insights -->
+  <div class="section">
+    <h2>Insights</h2>
+
+    <div class="subsection" style="margin-top:0; padding-top:0; border-top:none;">
+      <h3>Weak Areas</h3>
+      <div id="insights-errors" class="insight-list"></div>
+    </div>
+
+    <div class="subsection">
+      <h3>Strong Areas</h3>
+      <div id="insights-strong"></div>
+    </div>
+
+    <div class="subsection">
+      <h3>Most Used Coaches</h3>
+      <div id="insights-coaches"></div>
+    </div>
+
+    <div class="subsection">
+      <h3>Most Used Sites</h3>
+      <div id="insights-sites"></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn" id="btn-export">Export Data as JSON</button>
+      <button class="btn btn-danger" id="btn-clear">Clear All Memory</button>
+    </div>
   </div>
 
   <div class="status-msg" id="status-msg">Settings saved</div>

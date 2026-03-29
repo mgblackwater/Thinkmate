@@ -49,6 +49,7 @@
         "core/panel.js",
         "core/detector.js",
         "core/storage.js",
+        "core/memory.js",
         "core/api.js",
         "coaches/index.js",
         "coaches/english-coach.js",

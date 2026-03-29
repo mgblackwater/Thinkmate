@@ -2,6 +2,7 @@
 // Thinkmate options page logic
 
 import * as storage from './core/storage.js';
+import * as memory from './core/memory.js';
 import coaches from './coaches/index.js';
 
 // --- DOM References ---
@@ -19,6 +20,18 @@ const panelPosition = document.getElementById('panel-position');
 const coachList = document.getElementById('coach-list');
 const statusMsg = document.getElementById('status-msg');
 
+// Profile fields
+const profileFields = {
+  name: document.getElementById('profile-name'),
+  nationality: document.getElementById('profile-nationality'),
+  native_language: document.getElementById('profile-language'),
+  profession: document.getElementById('profile-profession'),
+  seniority: document.getElementById('profile-seniority'),
+  goals: document.getElementById('profile-goals'),
+  work_context: document.getElementById('profile-work'),
+  communication_style: document.getElementById('profile-style')
+};
+
 let currentSettings = {};
 
 // --- Initialize ---
@@ -34,6 +47,30 @@ async function init() {
   showProviderFields(currentSettings.provider);
   loadModels(currentSettings.provider);
   renderCoachList();
+  loadProfile();
+  renderInsights();
+}
+
+// --- Profile ---
+async function loadProfile() {
+  const profile = await memory.getProfile();
+  for (const [key, el] of Object.entries(profileFields)) {
+    if (el) el.value = profile[key] || '';
+  }
+}
+
+function saveProfile() {
+  const profile = {};
+  for (const [key, el] of Object.entries(profileFields)) {
+    if (el) profile[key] = el.value;
+  }
+  memory.setProfile(profile);
+  showStatus();
+}
+
+// Auto-save profile on change
+for (const el of Object.values(profileFields)) {
+  if (el) el.addEventListener('change', saveProfile);
 }
 
 // --- Provider Fields ---
@@ -105,7 +142,6 @@ geminiKey.addEventListener('change', () => save({ gemini_api_key: geminiKey.valu
 geminiModel.addEventListener('change', () => save({ gemini_model: geminiModel.value }));
 openrouterKey.addEventListener('change', () => {
   save({ openrouter_api_key: openrouterKey.value });
-  // Clear model cache and reload
   storage.setLocal({ openrouter_models_cache: null, openrouter_models_cache_time: 0 });
   loadModels('openrouter');
 });
@@ -141,7 +177,6 @@ function renderCoachList() {
       </div>
     `;
 
-    // Coach-specific settings
     if (coach.settings && Object.keys(coach.settings).length > 0) {
       const settingsDiv = document.createElement('div');
       settingsDiv.className = `coach-settings ${enabled ? 'visible' : ''}`;
@@ -175,18 +210,13 @@ function renderCoachList() {
     coachList.appendChild(item);
   });
 
-  // Event listeners for coach toggles
   coachList.addEventListener('change', (e) => {
     const toggleId = e.target.dataset.coachToggle;
     if (toggleId) {
       storage.setCoachEnabled(toggleId, e.target.checked);
       currentSettings.coaches_enabled[toggleId] = e.target.checked;
-
-      // Show/hide coach settings
       const settingsDiv = coachList.querySelector(`[data-coach-settings="${toggleId}"]`);
-      if (settingsDiv) {
-        settingsDiv.classList.toggle('visible', e.target.checked);
-      }
+      if (settingsDiv) settingsDiv.classList.toggle('visible', e.target.checked);
       showStatus();
     }
 
@@ -197,6 +227,97 @@ function renderCoachList() {
       showStatus();
     }
   });
+}
+
+// --- Insights ---
+async function renderInsights() {
+  const mem = await memory.getMemory();
+
+  // Error patterns
+  const errorsContainer = document.getElementById('insights-errors');
+  if (mem.error_patterns.length === 0) {
+    errorsContainer.innerHTML = '<div class="insight-empty">No patterns learned yet. Start using Thinkmate!</div>';
+  } else {
+    const sorted = [...mem.error_patterns].sort((a, b) => b.count - a.count);
+    errorsContainer.innerHTML = sorted.map((e, i) => `
+      <div class="insight-item">
+        <span class="category">${e.category}</span>
+        <span class="pattern">${escapeHtml(e.pattern)}</span>
+        <span class="count">${e.count}x</span>
+        <button class="insight-delete" data-delete-pattern="${i}" title="Delete">&times;</button>
+      </div>
+    `).join('');
+  }
+
+  // Strong areas
+  const strongContainer = document.getElementById('insights-strong');
+  if (mem.strong_areas.length === 0) {
+    strongContainer.innerHTML = '<div class="insight-empty">Keep practicing to build strong areas!</div>';
+  } else {
+    strongContainer.innerHTML = mem.strong_areas.map(s =>
+      `<span class="insight-strong">${s.category} (${s.streak} streak)</span>`
+    ).join('');
+  }
+
+  // Coach usage
+  const coachesContainer = document.getElementById('insights-coaches');
+  const coachEntries = Object.entries(mem.coach_usage).sort((a, b) => b[1].count - a[1].count);
+  if (coachEntries.length === 0) {
+    coachesContainer.innerHTML = '<div class="insight-empty">No usage data yet.</div>';
+  } else {
+    coachesContainer.innerHTML = coachEntries.map(([id, data]) => {
+      const coach = coaches.find(c => c.id === id);
+      const name = coach ? `${coach.icon} ${coach.name}` : id;
+      return `<div class="insight-usage"><span>${name}</span><span>${data.count} sessions</span></div>`;
+    }).join('');
+  }
+
+  // Site usage
+  const sitesContainer = document.getElementById('insights-sites');
+  const siteEntries = Object.entries(mem.site_usage).sort((a, b) => b[1] - a[1]);
+  if (siteEntries.length === 0) {
+    sitesContainer.innerHTML = '<div class="insight-empty">No site data yet.</div>';
+  } else {
+    sitesContainer.innerHTML = siteEntries.map(([site, count]) =>
+      `<div class="insight-usage"><span>${escapeHtml(site)}</span><span>${count} sessions</span></div>`
+    ).join('');
+  }
+
+  // Delete pattern handler
+  errorsContainer.addEventListener('click', async (e) => {
+    const idx = e.target.dataset.deletePattern;
+    if (idx !== undefined) {
+      await memory.deleteErrorPattern(parseInt(idx));
+      renderInsights();
+      showStatus();
+    }
+  });
+}
+
+// --- Export / Clear ---
+document.getElementById('btn-export').addEventListener('click', async () => {
+  const data = await memory.exportAllData();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `thinkmate-data-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('btn-clear').addEventListener('click', async () => {
+  if (confirm('Clear all learned memory? This cannot be undone. Your profile will be kept.')) {
+    await memory.clearAllMemory();
+    renderInsights();
+    showStatus();
+  }
+});
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
 }
 
 // --- Init ---

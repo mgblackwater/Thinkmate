@@ -1,14 +1,14 @@
 // core/api.js
 // Provider-agnostic API client — called from background.js only
 
-export async function callProvider({ provider, apiKey, baseUrl, model, systemPrompt, userText }) {
+export async function callProvider({ provider, apiKey, baseUrl, model, systemPrompt, userText, sessionMessages }) {
   switch (provider) {
     case 'gemini':
-      return callGemini({ apiKey, model, systemPrompt, userText });
+      return callGemini({ apiKey, model, systemPrompt, userText, sessionMessages });
     case 'openrouter':
-      return callOpenRouter({ apiKey, model, systemPrompt, userText });
+      return callOpenRouter({ apiKey, model, systemPrompt, userText, sessionMessages });
     case 'ollama':
-      return callOllama({ baseUrl, model, systemPrompt, userText });
+      return callOllama({ baseUrl, model, systemPrompt, userText, sessionMessages });
     default:
       throw new Error(`Unknown provider: ${provider}`);
   }
@@ -16,19 +16,26 @@ export async function callProvider({ provider, apiKey, baseUrl, model, systemPro
 
 // --- Gemini ---
 
-async function callGemini({ apiKey, model, systemPrompt, userText }) {
+async function callGemini({ apiKey, model, systemPrompt, userText, sessionMessages }) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+  // Build contents with session history
+  const contents = [];
+  if (sessionMessages && sessionMessages.length > 0) {
+    for (const msg of sessionMessages) {
+      contents.push({
+        role: msg.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: msg.content }]
+      });
+    }
+  }
+  contents.push({ role: 'user', parts: [{ text: userText }] });
 
   const body = {
     system_instruction: {
       parts: [{ text: systemPrompt }]
     },
-    contents: [
-      {
-        role: 'user',
-        parts: [{ text: userText }]
-      }
-    ],
+    contents,
     generationConfig: {
       responseMimeType: 'application/json'
     }
@@ -53,16 +60,16 @@ async function callGemini({ apiKey, model, systemPrompt, userText }) {
 
 // --- OpenRouter ---
 
-async function callOpenRouter({ apiKey, model, systemPrompt, userText }) {
+async function callOpenRouter({ apiKey, model, systemPrompt, userText, sessionMessages }) {
   const url = 'https://openrouter.ai/api/v1/chat/completions';
 
-  const body = {
-    model: model,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userText }
-    ]
-  };
+  const messages = [{ role: 'system', content: systemPrompt }];
+  if (sessionMessages && sessionMessages.length > 0) {
+    messages.push(...sessionMessages);
+  }
+  messages.push({ role: 'user', content: userText });
+
+  const body = { model, messages };
 
   const res = await fetch(url, {
     method: 'POST',
@@ -88,18 +95,16 @@ async function callOpenRouter({ apiKey, model, systemPrompt, userText }) {
 
 // --- Ollama ---
 
-async function callOllama({ baseUrl, model, systemPrompt, userText }) {
+async function callOllama({ baseUrl, model, systemPrompt, userText, sessionMessages }) {
   const url = `${baseUrl}/api/chat`;
 
-  const body = {
-    model: model,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userText }
-    ],
-    stream: false,
-    format: 'json'
-  };
+  const messages = [{ role: 'system', content: systemPrompt }];
+  if (sessionMessages && sessionMessages.length > 0) {
+    messages.push(...sessionMessages);
+  }
+  messages.push({ role: 'user', content: userText });
+
+  const body = { model, messages, stream: false, format: 'json' };
 
   const res = await fetch(url, {
     method: 'POST',

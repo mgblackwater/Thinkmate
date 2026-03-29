@@ -1,5 +1,5 @@
 // content.js
-// Thinkmate content script — bootstraps detector + panel
+// Thinkmate content script — bootstraps detector + panel + memory
 
 (async () => {
   // Dynamic import of ES modules from extension
@@ -7,9 +7,13 @@
   const { Detector } = await import(chrome.runtime.getURL('core/detector.js'));
   const storageModule = await import(chrome.runtime.getURL('core/storage.js'));
   const coachesModule = await import(chrome.runtime.getURL('coaches/index.js'));
+  const memoryModule = await import(chrome.runtime.getURL('core/memory.js'));
 
   // Load settings
   const settings = await storageModule.getAll();
+
+  // Current domain for session context
+  const currentDomain = window.location.hostname;
 
   // Filter to enabled coaches only
   const enabledCoaches = coachesModule.coaches.filter(
@@ -23,12 +27,19 @@
     coaches: enabledCoaches,
     panelPosition: settings.panel_position,
     onAnalyze: async (coach, text) => {
-      // Read fresh settings (user may have changed API key since page load)
+      // Read fresh settings
       const freshSettings = await storageModule.getAll();
       const coachSettings = freshSettings.coach_settings[coach.id] || {};
-      const systemPrompt = typeof coach.systemPrompt === 'function'
+      const basePrompt = typeof coach.systemPrompt === 'function'
         ? coach.systemPrompt(coachSettings)
         : coach.systemPrompt;
+
+      // Inject memory context prefix
+      const contextPrefix = await memoryModule.buildContextPrefix();
+      const systemPrompt = contextPrefix + basePrompt;
+
+      // Build session history messages
+      const sessionMessages = memoryModule.buildSessionMessages(currentDomain);
 
       // Send to background for API call
       let response;
@@ -36,7 +47,8 @@
         response = await chrome.runtime.sendMessage({
           type: 'analyze',
           systemPrompt,
-          userText: text
+          userText: text,
+          sessionMessages
         });
       } catch (err) {
         throw new Error('Failed to reach Thinkmate. Try reloading the page.');
@@ -47,16 +59,27 @@
       if (!response.content) throw new Error('Empty response from AI provider.');
 
       // Parse JSON response
+      let result;
       try {
-        return JSON.parse(response.content);
+        result = JSON.parse(response.content);
       } catch {
-        // Try to extract JSON from response if wrapped in markdown
         const jsonMatch = response.content.match(/```(?:json)?\s*([\s\S]*?)```/);
         if (jsonMatch) {
-          return JSON.parse(jsonMatch[1]);
+          result = JSON.parse(jsonMatch[1]);
+        } else {
+          throw new Error('Unexpected response format. Please retry.');
         }
-        throw new Error('Unexpected response format. Please retry.');
       }
+
+      // Update memory (async, don't block UI)
+      memoryModule.addSessionEntry(currentDomain, text, result);
+      memoryModule.updateMemory({
+        coachId: coach.id,
+        domain: currentDomain,
+        responseData: result
+      }).catch(err => console.error('[Thinkmate] Memory update failed:', err));
+
+      return result;
     },
     onApply: (element, text) => {
       detector.applyText(element, text);
@@ -89,7 +112,7 @@
   }
   panel._onTriggerClick = openPanel;
 
-  // --- Listen for toolbar icon click ---
+  // --- Listen for toolbar icon click / keyboard shortcut ---
   chrome.runtime.onMessage.addListener((message) => {
     if (message.type === 'toggle-panel') {
       openPanel();
