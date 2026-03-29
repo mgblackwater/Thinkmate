@@ -90,22 +90,26 @@ export class Detector {
     if (!el) throw new Error('No element to apply to');
 
     if (el.isContentEditable) {
-      // Find the actual contenteditable element (might be a parent)
+      // Find the root contenteditable element
       let target = el;
       while (target.parentElement && target.parentElement.isContentEditable) {
         target = target.parentElement;
       }
 
+      // Inject into page context — content script's execCommand
+      // doesn't work on some React apps (WhatsApp)
+      const escaped = text.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n');
+      const script = document.createElement('script');
+      script.textContent = `(function(){
+        var el = document.querySelector('[contenteditable="true"]:focus') || document.activeElement;
+        if (!el) return;
+        el.focus();
+        window.getSelection().selectAllChildren(el);
+        document.execCommand('insertText', false, '${escaped}');
+      })()`;
       target.focus();
-
-      // Select all content within this element only
-      const selection = window.getSelection();
-      selection.selectAllChildren(target);
-
-      // insertText replaces the current selection
-      document.execCommand('insertText', false, text);
-
-      this._dispatchInputEvents(target);
+      document.head.appendChild(script);
+      script.remove();
     } else {
       el.focus();
 
