@@ -51,8 +51,9 @@ const observer = new MutationObserver((mutations) => {
         }
 
         // Paste into the now-cleared field
+        // Use editor.focus() to properly initialize Lexical's cursor
         setTimeout(() => {
-          el.focus();
+          editor.focus();
           const dt = new DataTransfer();
           dt.setData('text/plain', text);
           el.dispatchEvent(new ClipboardEvent('paste', {
@@ -66,7 +67,7 @@ const observer = new MutationObserver((mutations) => {
             if (el.textContent?.trim() === text.trim()) return;
             copyFallback(el, text);
           });
-        }, 50);
+        }, 100);
         return;
       }
 
