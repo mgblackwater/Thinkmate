@@ -90,24 +90,13 @@ export class Detector {
     if (!el) throw new Error('No element to apply to');
 
     if (el.isContentEditable) {
-      el.focus();
-
-      // Must run in page's main world — content script's isolated world
-      // execCommand doesn't trigger React/framework event handlers
+      // Apply via main-world script (apply.js) using custom event
+      // Content script's execCommand doesn't work on React apps (WhatsApp, etc.)
       const id = 'tm-apply-' + Date.now();
       el.setAttribute('data-tm-apply', id);
-
-      const script = document.createElement('script');
-      script.textContent = `(function(){
-        var el = document.querySelector('[data-tm-apply="${id}"]');
-        if (!el) return;
-        el.removeAttribute('data-tm-apply');
-        el.focus();
-        window.getSelection().selectAllChildren(el);
-        document.execCommand('insertText', false, ${JSON.stringify(text)});
-      })()`;
-      document.documentElement.appendChild(script);
-      script.remove();
+      window.dispatchEvent(new CustomEvent('thinkmate-apply', {
+        detail: { targetId: id, text }
+      }));
     } else {
       el.focus();
 
