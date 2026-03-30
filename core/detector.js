@@ -90,19 +90,27 @@ export class Detector {
     if (!el) throw new Error('No element to apply to');
 
     if (el.isContentEditable) {
-      el.focus();
+      // Find the root contenteditable
+      let target = el;
+      while (target.parentElement && target.parentElement.isContentEditable) {
+        target = target.parentElement;
+      }
+      target.focus();
 
-      // Select all content within this element
+      // Try Ctrl+A via keyboard event to trigger app's native select-all
+      target.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', code: 'KeyA', ctrlKey: true, bubbles: true }));
+
+      // Also use Selection API as backup
       const selection = window.getSelection();
-      const range = document.createRange();
-      range.selectNodeContents(el);
-      selection.removeAllRanges();
-      selection.addRange(range);
+      if (!selection.toString()) {
+        // Native Ctrl+A didn't work, use Selection API
+        selection.selectAllChildren(target);
+      }
 
       // Replace selection with new text
       document.execCommand('insertText', false, text);
 
-      this._dispatchInputEvents(el);
+      this._dispatchInputEvents(target);
     } else {
       el.focus();
 
