@@ -92,17 +92,22 @@ export class Detector {
     if (el.isContentEditable) {
       el.focus();
 
-      // Select all content within this element
-      const selection = window.getSelection();
-      const range = document.createRange();
-      range.selectNodeContents(el);
-      selection.removeAllRanges();
-      selection.addRange(range);
+      // Must run in page's main world — content script's isolated world
+      // execCommand doesn't trigger React/framework event handlers
+      const id = 'tm-apply-' + Date.now();
+      el.setAttribute('data-tm-apply', id);
 
-      // Replace selection with new text
-      document.execCommand('insertText', false, text);
-
-      this._dispatchInputEvents(el);
+      const script = document.createElement('script');
+      script.textContent = `(function(){
+        var el = document.querySelector('[data-tm-apply="${id}"]');
+        if (!el) return;
+        el.removeAttribute('data-tm-apply');
+        el.focus();
+        window.getSelection().selectAllChildren(el);
+        document.execCommand('insertText', false, ${JSON.stringify(text)});
+      })()`;
+      document.documentElement.appendChild(script);
+      script.remove();
     } else {
       el.focus();
 
