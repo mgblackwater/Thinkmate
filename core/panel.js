@@ -560,6 +560,7 @@ export class Panel {
     }
 
     try {
+      console.log('[Thinkmate] Apply:', { el: this.sourceElement, tag: this.sourceElement?.tagName, editable: this.sourceElement?.isContentEditable, connected: this.sourceElement?.isConnected, textLen: text.length });
       this.onApply(this.sourceElement, text);
       this._showToast('Applied!');
     } catch (err) {
