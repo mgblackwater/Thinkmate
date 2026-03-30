@@ -559,16 +559,21 @@ export class Panel {
       return;
     }
 
-    try {
-      console.log('[Thinkmate] Apply:', { el: this.sourceElement, tag: this.sourceElement?.tagName, editable: this.sourceElement?.isContentEditable, connected: this.sourceElement?.isConnected, textLen: text.length });
-      this.onApply(this.sourceElement, text);
-      this._showToast('Applied!');
-    } catch (err) {
-      console.error('[Thinkmate] Apply failed:', err);
-      navigator.clipboard.writeText(text).then(() => {
-        this._showToast('Copied to clipboard instead');
-      });
-    }
+    const el = this.sourceElement;
+    const applyFn = this.onApply;
+    const toast = this._showToast.bind(this);
+
+    // Delay to let the button click event finish — otherwise Shadow DOM holds focus
+    setTimeout(() => {
+      try {
+        el.focus();
+        applyFn(el, text);
+        toast('Applied!');
+      } catch (err) {
+        console.error('[Thinkmate] Apply failed:', err);
+        navigator.clipboard.writeText(text).then(() => toast('Copied to clipboard instead'));
+      }
+    }, 50);
   }
 
   _showToast(message) {
