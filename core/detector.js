@@ -90,13 +90,10 @@ export class Detector {
     if (!el) throw new Error('No element to apply to');
 
     if (el.isContentEditable) {
-      // Apply via main-world script (apply.js) using custom event
+      // Apply via main-world script (apply.js) using DOM attribute
       // Content script's execCommand doesn't work on React apps (WhatsApp, etc.)
-      const id = 'tm-apply-' + Date.now();
-      el.setAttribute('data-tm-apply', id);
-      window.dispatchEvent(new CustomEvent('thinkmate-apply', {
-        detail: { targetId: id, text }
-      }));
+      // The shared DOM bridges the isolated/main world gap
+      el.setAttribute('data-tm-apply', text);
     } else {
       el.focus();
 

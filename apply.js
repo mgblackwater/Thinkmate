@@ -1,12 +1,23 @@
 // apply.js — runs in the MAIN world (page context)
-// Listens for custom events from the content script to apply text
+// Watches for data-tm-apply attributes set by the content script
+// and applies text using execCommand in the page's context
 
-window.addEventListener('thinkmate-apply', (e) => {
-  const { targetId, text } = e.detail;
-  const el = document.querySelector(`[data-tm-apply="${targetId}"]`);
-  if (!el) return;
-  el.removeAttribute('data-tm-apply');
-  el.focus();
-  window.getSelection().selectAllChildren(el);
-  document.execCommand('insertText', false, text);
+const observer = new MutationObserver((mutations) => {
+  for (const mutation of mutations) {
+    if (mutation.type === 'attributes' && mutation.attributeName === 'data-tm-apply') {
+      const el = mutation.target;
+      const text = el.getAttribute('data-tm-apply');
+      if (!text) return;
+      el.removeAttribute('data-tm-apply');
+      el.focus();
+      window.getSelection().selectAllChildren(el);
+      document.execCommand('insertText', false, text);
+    }
+  }
+});
+
+observer.observe(document.body, {
+  attributes: true,
+  attributeFilter: ['data-tm-apply'],
+  subtree: true
 });
