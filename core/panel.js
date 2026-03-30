@@ -538,7 +538,7 @@ export class Panel {
   }
 
   _apply() {
-    const text = this.resultData?.corrected || this.resultData?.rewritten || this.resultData?.translated || '';
+    const text = this.resultData?.corrected || this.resultData?.rephrased || this.resultData?.rewritten || this.resultData?.translated || '';
     if (!text) {
       this._showToast('Nothing to apply');
       return;

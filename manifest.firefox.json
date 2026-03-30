@@ -83,6 +83,7 @@
         "core/sync.js",
         "core/api.js",
         "coaches/index.js",
+        "coaches/rephrase-coach.js",
         "coaches/english-coach.js",
         "coaches/blue-canoe-coach.js",
         "coaches/clarity-coach.js",

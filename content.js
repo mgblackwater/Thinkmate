@@ -218,7 +218,7 @@
       }
 
       // Replace text with corrected/rewritten version
-      const replacement = result.corrected || result.rewritten || result.translated;
+      const replacement = result.corrected || result.rephrased || result.rewritten || result.translated;
       if (replacement && replacement !== text) {
         detector.applyText(el, replacement);
         showQuickToast('Corrected!');
