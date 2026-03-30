@@ -100,11 +100,7 @@ export class Detector {
       selection.addRange(range);
 
       // Replace selection with new text
-      if (!document.execCommand('insertText', false, text)) {
-        // Fallback: clear and insert
-        el.textContent = '';
-        document.execCommand('insertText', false, text);
-      }
+      document.execCommand('insertText', false, text);
 
       this._dispatchInputEvents(el);
     } else {
