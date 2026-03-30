@@ -22,8 +22,9 @@ Coming soon — submitted for review.
 ## Features
 
 ### Coaching
-- **9 plugin coaches** — English, Clarity, Decision, Debate, Stoic, Scrum, Systems Thinking, Tone Rewriter, Translator
-- **English Coach** — grammar, vocabulary, pronunciation with Color Vowel approach, IELTS level targeting
+- **10 plugin coaches** — English, Blue Canoe, Clarity, Decision, Debate, Stoic, Scrum, Systems Thinking, Tone Rewriter, Translator
+- **English Coach** — grammar, vocabulary, pronunciation, IELTS level targeting
+- **Blue Canoe Coach** — Color Vowel pronunciation (map vowel sounds to colors). Best with Gemini 2.0 Flash.
 - **Translator** — 28+ languages with dropdown + custom language support
 - **Inline coach settings** — change target language, IELTS level, tone directly in the panel
 
