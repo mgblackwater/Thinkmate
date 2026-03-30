@@ -1,0 +1,102 @@
+{
+  "manifest_version": 3,
+  "name": "Thinkmate",
+  "version": "1.0.0",
+  "description": "Your thinking partner — AI coaching layer for any website",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "thinkmate@mgblackwater.com",
+      "strict_min_version": "111.0"
+    }
+  },
+  "permissions": ["storage", "activeTab", "declarativeNetRequest", "contextMenus"],
+  "commands": {
+    "toggle-panel": {
+      "suggested_key": {
+        "default": "Ctrl+Period",
+        "mac": "Command+Period"
+      },
+      "description": "Open/close Thinkmate panel"
+    },
+    "quick-correct": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Period",
+        "mac": "Command+Shift+Period"
+      },
+      "description": "Quick-correct text in active input"
+    }
+  },
+  "host_permissions": [
+    "https://generativelanguage.googleapis.com/*",
+    "https://openrouter.ai/*",
+    "https://api.groq.com/*",
+    "http://localhost/*",
+    "https://*.supabase.co/*"
+  ],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "ollama_cors",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  },
+  "background": {
+    "scripts": ["background.js"],
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["apply.js"],
+      "run_at": "document_idle",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_page": "options.html",
+  "action": {
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "Thinkmate"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "core/panel.js",
+        "core/detector.js",
+        "core/storage.js",
+        "core/memory.js",
+        "core/sync.js",
+        "core/api.js",
+        "coaches/index.js",
+        "coaches/english-coach.js",
+        "coaches/blue-canoe-coach.js",
+        "coaches/clarity-coach.js",
+        "coaches/decision-coach.js",
+        "coaches/debate-coach.js",
+        "coaches/stoic-coach.js",
+        "coaches/scrum-coach.js",
+        "coaches/systems-thinking-coach.js",
+        "coaches/tone-rewriter.js",
+        "coaches/translator-coach.js",
+        "coaches/custom-coach.js",
+        "panel.css"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
