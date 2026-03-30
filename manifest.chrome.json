@@ -25,7 +25,6 @@
     "https://openrouter.ai/*",
     "https://api.groq.com/*",
     "http://localhost/*",
-    "https://*.supabase.co/*"
   ],
   "declarative_net_request": {
     "rule_resources": [
@@ -74,7 +73,6 @@
         "core/detector.js",
         "core/storage.js",
         "core/memory.js",
-        "core/sync.js",
         "core/api.js",
         "coaches/index.js",
         "coaches/rephrase-coach.js",

@@ -27,12 +27,6 @@ const profileFields = {
   communication_style: document.getElementById('profile-style')
 };
 
-// Sync DOM references
-const syncStatusEl = document.getElementById('sync-status');
-const syncLabel = document.getElementById('sync-label');
-const supabaseUrlInput = document.getElementById('supabase-url');
-const supabaseKeyInput = document.getElementById('supabase-key');
-const syncNowBtn = document.getElementById('btn-sync-now');
 
 let currentSettings = {};
 
@@ -52,22 +46,10 @@ async function init() {
   populateQuickCorrectCoaches();
   loadProfile();
 
-  // Personalization + Memory toggles
+  // Personalization toggle
   const persOn = currentSettings.personalization_enabled === true;
-  const memOn = currentSettings.memory_enabled === true;
-  const cloudOn = currentSettings.cloud_sync_enabled === true;
   togglePersonalization.checked = persOn;
-  toggleMemory.checked = memOn;
-  if (cloudOn) {
-    document.querySelector('input[name="memory-storage"][value="cloud"]').checked = true;
-  }
-  const storageType = cloudOn ? 'cloud' : 'local';
-  updatePersonalizationUI(persOn, memOn, storageType);
-
-  if (memOn) renderInsights();
-
-  loadSyncStatus();
-  loadSyncConfig();
+  profileSection.classList.toggle('hidden', !persOn);
 }
 
 // --- Profile ---
@@ -230,53 +212,14 @@ function populateQuickCorrectCoaches() {
 }
 quickCorrectSelect.addEventListener('change', () => save({ quick_correct_coach: quickCorrectSelect.value }));
 
-// --- Personalization & Memory Toggles ---
+// --- Personalization Toggle ---
 const togglePersonalization = document.getElementById('toggle-personalization');
-const toggleMemory = document.getElementById('toggle-memory');
-const memorySection = document.getElementById('memory-section');
-const memoryStorageOptions = document.getElementById('memory-storage-options');
 const profileSection = document.getElementById('profile-section');
-const supabaseFieldsSection = document.getElementById('supabase-fields');
-const insightsSection = document.getElementById('insights-section');
-const memoryStorageRadios = document.querySelectorAll('input[name="memory-storage"]');
-
-function updatePersonalizationUI(persOn, memOn, storageType) {
-  memorySection.classList.toggle('hidden', !persOn);
-  profileSection.classList.toggle('hidden', !persOn);
-  memoryStorageOptions.classList.toggle('hidden', !memOn);
-  supabaseFieldsSection.classList.toggle('hidden', storageType !== 'cloud');
-  insightsSection.style.display = memOn ? '' : 'none';
-}
 
 togglePersonalization.addEventListener('change', () => {
   const on = togglePersonalization.checked;
   save({ personalization_enabled: on });
-  if (!on) {
-    toggleMemory.checked = false;
-    save({ memory_enabled: false, cloud_sync_enabled: false });
-  }
-  const storageType = document.querySelector('input[name="memory-storage"]:checked')?.value || 'local';
-  updatePersonalizationUI(on, toggleMemory.checked, storageType);
-});
-
-toggleMemory.addEventListener('change', () => {
-  const on = toggleMemory.checked;
-  save({ memory_enabled: on });
-  if (!on) {
-    document.querySelector('input[name="memory-storage"][value="local"]').checked = true;
-    save({ cloud_sync_enabled: false });
-  }
-  const storageType = document.querySelector('input[name="memory-storage"]:checked')?.value || 'local';
-  updatePersonalizationUI(togglePersonalization.checked, on, storageType);
-});
-
-memoryStorageRadios.forEach(radio => {
-  radio.addEventListener('change', () => {
-    const isCloud = radio.value === 'cloud';
-    save({ cloud_sync_enabled: isCloud });
-    supabaseFieldsSection.classList.toggle('hidden', !isCloud);
-    if (isCloud) loadSyncStatus();
-  });
+  profileSection.classList.toggle('hidden', !on);
 });
 
 // --- Coach List ---
@@ -377,71 +320,6 @@ function renderCoachList() {
   });
 }
 
-// --- Insights ---
-async function renderInsights() {
-  const mem = await memory.getMemory();
-
-  // Error patterns
-  const errorsContainer = document.getElementById('insights-errors');
-  if (mem.error_patterns.length === 0) {
-    errorsContainer.innerHTML = '<div class="insight-empty">No patterns learned yet. Start using Thinkmate!</div>';
-  } else {
-    const sorted = [...mem.error_patterns].sort((a, b) => b.count - a.count);
-    errorsContainer.innerHTML = sorted.map((e, i) => `
-      <div class="insight-item">
-        <span class="category">${e.category}</span>
-        <span class="pattern">${escapeHtml(e.pattern)}</span>
-        <span class="count">${e.count}x</span>
-        <button class="insight-delete" data-delete-pattern="${i}" title="Delete">&times;</button>
-      </div>
-    `).join('');
-  }
-
-  // Strong areas
-  const strongContainer = document.getElementById('insights-strong');
-  if (mem.strong_areas.length === 0) {
-    strongContainer.innerHTML = '<div class="insight-empty">Keep practicing to build strong areas!</div>';
-  } else {
-    strongContainer.innerHTML = mem.strong_areas.map(s =>
-      `<span class="insight-strong">${s.category} (${s.streak} streak)</span>`
-    ).join('');
-  }
-
-  // Coach usage
-  const coachesContainer = document.getElementById('insights-coaches');
-  const coachEntries = Object.entries(mem.coach_usage).sort((a, b) => b[1].count - a[1].count);
-  if (coachEntries.length === 0) {
-    coachesContainer.innerHTML = '<div class="insight-empty">No usage data yet.</div>';
-  } else {
-    coachesContainer.innerHTML = coachEntries.map(([id, data]) => {
-      const coach = coaches.find(c => c.id === id);
-      const name = coach ? `${coach.icon} ${coach.name}` : id;
-      return `<div class="insight-usage"><span>${name}</span><span>${data.count} sessions</span></div>`;
-    }).join('');
-  }
-
-  // Site usage
-  const sitesContainer = document.getElementById('insights-sites');
-  const siteEntries = Object.entries(mem.site_usage).sort((a, b) => b[1] - a[1]);
-  if (siteEntries.length === 0) {
-    sitesContainer.innerHTML = '<div class="insight-empty">No site data yet.</div>';
-  } else {
-    sitesContainer.innerHTML = siteEntries.map(([site, count]) =>
-      `<div class="insight-usage"><span>${escapeHtml(site)}</span><span>${count} sessions</span></div>`
-    ).join('');
-  }
-
-  // Delete pattern handler
-  errorsContainer.addEventListener('click', async (e) => {
-    const idx = e.target.dataset.deletePattern;
-    if (idx !== undefined) {
-      await memory.deleteErrorPattern(parseInt(idx));
-      renderInsights();
-      showStatus();
-    }
-  });
-}
-
 // --- Export / Clear ---
 document.getElementById('btn-export').addEventListener('click', async () => {
   const data = await memory.exportAllData();
@@ -455,10 +333,10 @@ document.getElementById('btn-export').addEventListener('click', async () => {
 });
 
 document.getElementById('btn-clear').addEventListener('click', async () => {
-  if (confirm('Clear all learned memory? This cannot be undone. Your profile will be kept.')) {
-    await memory.clearAllMemory();
-    renderInsights();
-    showStatus();
+  if (confirm('Clear all settings and profile? This cannot be undone.')) {
+    await chrome.storage.sync.clear();
+    await chrome.storage.local.clear();
+    location.reload();
   }
 });
 
@@ -468,66 +346,6 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-// --- Sync ---
-
-async function loadSyncConfig() {
-  const data = await chrome.storage.sync.get({
-    supabase_config: { url: '', anon_key: '' }
-  });
-  supabaseUrlInput.value = data.supabase_config.url || '';
-  supabaseKeyInput.value = data.supabase_config.anon_key || '';
-}
-
-function saveSyncConfig() {
-  chrome.storage.sync.set({
-    supabase_config: {
-      url: supabaseUrlInput.value.replace(/\/$/, ''),
-      anon_key: supabaseKeyInput.value
-    }
-  });
-  loadSyncStatus();
-  showStatus();
-}
-
-supabaseUrlInput.addEventListener('change', saveSyncConfig);
-supabaseKeyInput.addEventListener('change', saveSyncConfig);
-
-async function loadSyncStatus() {
-  try {
-    const result = await chrome.runtime.sendMessage({ type: 'sync-status' });
-    const dot = syncStatusEl.querySelector('.dot');
-
-    if (result.status === 'ready') {
-      dot.className = 'dot green';
-      syncLabel.textContent = 'Connected';
-      syncNowBtn.disabled = false;
-    } else {
-      dot.className = 'dot gray';
-      syncLabel.textContent = 'Not configured';
-      syncNowBtn.disabled = true;
-    }
-  } catch {
-    syncNowBtn.disabled = true;
-  }
-}
-
-syncNowBtn.addEventListener('click', async () => {
-  syncNowBtn.disabled = true;
-  syncNowBtn.textContent = 'Syncing...';
-
-  try {
-    const result = await chrome.runtime.sendMessage({ type: 'sync-now' });
-    if (result.error) throw new Error(result.error);
-    renderInsights();
-    loadProfile();
-    showStatus();
-  } catch (err) {
-    alert(`Sync failed: ${err.message}`);
-  } finally {
-    syncNowBtn.disabled = false;
-    syncNowBtn.textContent = 'Sync Now';
-  }
-});
 
 // --- Shortcuts link ---
 document.getElementById('shortcuts-link')?.addEventListener('click', (e) => {

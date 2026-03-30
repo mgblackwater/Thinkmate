@@ -280,67 +280,21 @@
       </div>
     </div>
 
-    <!-- Column 3: Personalization & Memory -->
+    <!-- Column 3: Personalization -->
     <div>
       <div class="section">
-        <h2>Personalization & Memory</h2>
+        <h2>Personalization</h2>
 
         <!-- Personalization toggle -->
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
           <div>
             <div style="font-size:14px; font-weight:600; color:#2d3748;">Enable personalization</div>
-            <div style="font-size:12px; color:#a0aec0; margin-top:2px;">Tailor coaching to your background and goals.</div>
+            <div style="font-size:12px; color:#a0aec0; margin-top:2px;">Tailor coaching to your background and goals. Stored permanently in your browser.</div>
           </div>
           <label class="toggle">
             <input type="checkbox" id="toggle-personalization">
             <span class="toggle-slider"></span>
           </label>
-        </div>
-
-        <!-- Memory toggle (visible when personalization is ON) -->
-        <div id="memory-section" class="hidden" style="margin-top:16px; padding-top:16px; border-top:1px solid #edf2f7;">
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-            <div>
-              <div style="font-size:14px; font-weight:600; color:#2d3748;">Enable memory</div>
-              <div style="font-size:12px; color:#a0aec0; margin-top:2px;">Learns your recurring mistakes and tracks progress.</div>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" id="toggle-memory">
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-
-          <!-- Memory storage option (visible when memory is ON) -->
-          <div id="memory-storage-options" class="hidden" style="margin-top:12px; padding:12px; background:#f7fafc; border:1px solid #e2e8f0; border-radius:8px;">
-            <div style="font-size:12px; font-weight:600; color:#4a5568; margin-bottom:8px;">Storage</div>
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:8px; font-size:13px; color:#2d3748;">
-              <input type="radio" name="memory-storage" value="local" checked> Local only
-              <span style="font-size:11px; color:#a0aec0;">(90-day rolling window, auto-pruned)</span>
-            </label>
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; color:#2d3748;">
-              <input type="radio" name="memory-storage" value="cloud"> Cloud via Supabase
-              <span style="font-size:11px; color:#a0aec0;">(persistent, cross-device)</span>
-            </label>
-
-            <!-- Supabase fields (visible when cloud is selected) -->
-            <div id="supabase-fields" class="hidden" style="margin-top:12px; padding-top:12px; border-top:1px solid #e2e8f0;">
-              <div id="sync-status" class="sync-status">
-                <span class="dot gray"></span>
-                <span id="sync-label">Not configured</span>
-              </div>
-              <div class="field">
-                <label for="supabase-url">Supabase Project URL</label>
-                <input type="text" id="supabase-url" placeholder="https://your-project.supabase.co">
-              </div>
-              <div class="field">
-                <label for="supabase-key">Anon Key</label>
-                <input type="password" id="supabase-key" placeholder="Your Supabase anon/public key">
-              </div>
-              <div class="btn-row">
-                <button class="btn" id="btn-sync-now" disabled>Sync Now</button>
-              </div>
-            </div>
-          </div>
         </div>
 
         <!-- Profile fields (visible when personalization is ON) -->
@@ -400,36 +354,11 @@
         <strong>Thinkmate has no servers.</strong> Your messages are sent directly to your chosen AI provider and are never stored anywhere.
       </p>
       <p style="font-size:13px; color:#718096; margin-bottom:16px; line-height:1.6;">
-        <strong>Personalization</strong> reads your profile to tailor responses — no extra data stored.<br>
-        <strong>Memory</strong> stores error patterns and progress scores locally (90-day rolling window). Cloud memory via Supabase is optional and persistent.
+        Only your settings and profile are stored in your browser. Your profile syncs across Chrome devices via your Google account.
       </p>
       <div class="btn-row">
-        <button class="btn" id="btn-export">Export Data as JSON</button>
+        <button class="btn" id="btn-export">Export Settings as JSON</button>
         <button class="btn btn-danger" id="btn-clear">Clear All Data</button>
-      </div>
-    </div>
-
-    <!-- Full width: Insights (only visible when memory is on) -->
-    <div class="section full-width" id="insights-section" style="display:none;">
-      <h2>Insights</h2>
-
-      <div class="grid" style="gap:16px;">
-        <div>
-          <h3 style="font-size:13px;font-weight:600;color:#4a5568;margin-bottom:10px;">Weak Areas</h3>
-          <div id="insights-errors" class="insight-list"></div>
-        </div>
-        <div>
-          <h3 style="font-size:13px;font-weight:600;color:#4a5568;margin-bottom:10px;">Strong Areas</h3>
-          <div id="insights-strong"></div>
-          <div style="margin-top:20px;">
-            <h3 style="font-size:13px;font-weight:600;color:#4a5568;margin-bottom:10px;">Most Used Coaches</h3>
-            <div id="insights-coaches"></div>
-          </div>
-        </div>
-        <div>
-          <h3 style="font-size:13px;font-weight:600;color:#4a5568;margin-bottom:10px;">Most Used Sites</h3>
-          <div id="insights-sites"></div>
-        </div>
       </div>
     </div>
 

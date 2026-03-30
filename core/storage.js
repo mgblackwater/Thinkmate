@@ -19,9 +19,7 @@ const DEFAULTS = {
   },
   custom_coaches: [],
   quick_correct_coach: 'english-coach',
-  personalization_enabled: false,
-  memory_enabled: false,
-  cloud_sync_enabled: false
+  personalization_enabled: false
 };
 
 export async function getAll() {

@@ -3,7 +3,6 @@
 
 import { callProvider, fetchModels } from './core/api.js';
 import * as storage from './core/storage.js';
-import * as sync from './core/sync.js';
 
 // Handle messages from content script and options page
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -24,18 +23,12 @@ async function handleMessage(message) {
     case 'open-options':
       chrome.runtime.openOptionsPage();
       return { ok: true };
-    case 'sync-status':
-      return sync.getSyncStatus();
-    case 'sync-now':
-      return handleSyncNow();
-    case 'sync-push':
-      return handleSyncPush(message);
     default:
       throw new Error(`Unknown message type: ${message.type}`);
   }
 }
 
-async function handleAnalyze({ systemPrompt, userText, sessionMessages, modelOverride }) {
+async function handleAnalyze({ systemPrompt, userText, modelOverride }) {
   const settings = await storage.getAll();
 
   // Parse provider:model format (e.g. "gemini:gemini-2.0-flash")
@@ -64,7 +57,7 @@ async function handleAnalyze({ systemPrompt, userText, sessionMessages, modelOve
       break;
   }
 
-  const result = await callProvider({ provider, apiKey, baseUrl, model, systemPrompt, userText, sessionMessages });
+  const result = await callProvider({ provider, apiKey, baseUrl, model, systemPrompt, userText });
   return result;
 }
 
@@ -159,16 +152,6 @@ async function handleCheckProvider() {
 }
 
 // --- Sync handlers ---
-
-async function handleSyncNow() {
-  const result = await sync.performFullSync();
-  return result;
-}
-
-async function handleSyncPush({ profile, memory }) {
-  const pushed = await sync.syncToRemote(profile, memory);
-  return { ok: pushed };
-}
 
 // Handle toolbar icon click — send message to active tab to toggle panel
 chrome.action.onClicked.addListener(async (tab) => {

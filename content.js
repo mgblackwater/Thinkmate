@@ -12,9 +12,6 @@
   // Load settings
   const settings = await storageModule.getAll();
 
-  // Current domain for session context
-  const currentDomain = window.location.hostname;
-
   // Filter to enabled coaches only
   const enabledCoaches = coachesModule.coaches.filter(
     c => settings.coaches_enabled[c.id] ?? c.enabled
@@ -58,12 +55,8 @@
 
       // Inject personalization context if enabled
       const persEnabled = (await storageModule.get('personalization_enabled')) === true;
-      const memEnabled = (await storageModule.get('memory_enabled')) === true;
       const contextPrefix = persEnabled ? await memoryModule.buildContextPrefix() : '';
       const systemPrompt = contextPrefix + basePrompt;
-
-      // Build session history messages (requires memory to be on)
-      const sessionMessages = memEnabled ? memoryModule.buildSessionMessages(currentDomain) : [];
 
       // Check for per-coach model override
       const modelOverride = freshSettings.coach_settings[coach.id]?.model_override || '';
@@ -75,7 +68,6 @@
           type: 'analyze',
           systemPrompt,
           userText: text,
-          sessionMessages,
           modelOverride
         });
       } catch (err) {
@@ -97,17 +89,6 @@
         } else {
           throw new Error('Unexpected response format. Please retry.');
         }
-      }
-
-      // Update memory if enabled (async, don't block UI)
-      const memoryEnabled = (await storageModule.get('memory_enabled')) === true;
-      if (memoryEnabled) {
-        memoryModule.addSessionEntry(currentDomain, text, result);
-        memoryModule.updateMemory({
-          coachId: coach.id,
-          domain: currentDomain,
-          responseData: result
-        }).catch(err => console.error('[Thinkmate] Memory update failed:', err));
       }
 
       return result;
@@ -189,18 +170,15 @@
       const basePrompt = typeof coach.systemPrompt === 'function'
         ? coach.systemPrompt(coachSettings) : coach.systemPrompt;
 
-      const memEnabled = freshSettings.memory_enabled === true;
       const persEnabled = freshSettings.personalization_enabled === true;
       const contextPrefix = persEnabled ? await memoryModule.buildContextPrefix() : '';
       const systemPrompt = contextPrefix + basePrompt;
-      const sessionMessages = memEnabled ? memoryModule.buildSessionMessages(currentDomain) : [];
       const modelOverride = freshSettings.coach_settings[coachId]?.model_override || '';
 
       const response = await chrome.runtime.sendMessage({
         type: 'analyze',
         systemPrompt,
         userText: text,
-        sessionMessages,
         modelOverride
       });
 
