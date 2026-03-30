@@ -1,7 +1,4 @@
 // apply.js — runs in the MAIN world (page context)
-// Watches for data-tm-apply attributes set by the content script
-
-console.log('[Thinkmate apply.js] Main world script loaded');
 
 const observer = new MutationObserver((mutations) => {
   for (const mutation of mutations) {
@@ -9,10 +6,29 @@ const observer = new MutationObserver((mutations) => {
       const el = mutation.target;
       const text = el.getAttribute('data-tm-apply');
       if (!text) return;
-      console.log('[Thinkmate apply.js] Detected apply:', text.substring(0, 50));
       el.removeAttribute('data-tm-apply');
+
+      // Focus and select all — try multiple methods
       el.focus();
-      window.getSelection().selectAllChildren(el);
+
+      // Method 1: selectAllChildren (standard)
+      const sel = window.getSelection();
+      sel.selectAllChildren(el);
+
+      // Method 2: if nothing selected, try range-based
+      if (!sel.toString()) {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+
+      // Method 3: if still nothing, try execCommand selectAll
+      if (!sel.toString()) {
+        document.execCommand('selectAll', false, null);
+      }
+
+      console.log('[Thinkmate] Selected text:', JSON.stringify(sel.toString().substring(0, 30)));
       document.execCommand('insertText', false, text);
     }
   }
