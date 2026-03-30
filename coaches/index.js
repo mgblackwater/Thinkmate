@@ -2,6 +2,7 @@
 // Coach registry — import all coaches and export as array
 
 import englishCoach from './english-coach.js';
+import blueCanoeCoach from './blue-canoe-coach.js';
 import clarityCoach from './clarity-coach.js';
 import decisionCoach from './decision-coach.js';
 import debateCoach from './debate-coach.js';
@@ -14,6 +15,7 @@ import translatorCoach from './translator-coach.js';
 // All built-in coaches in display order
 export const coaches = [
   englishCoach,
+  blueCanoeCoach,
   clarityCoach,
   decisionCoach,
   debateCoach,

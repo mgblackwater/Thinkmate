@@ -72,6 +72,7 @@
         "core/api.js",
         "coaches/index.js",
         "coaches/english-coach.js",
+        "coaches/blue-canoe-coach.js",
         "coaches/clarity-coach.js",
         "coaches/decision-coach.js",
         "coaches/debate-coach.js",
