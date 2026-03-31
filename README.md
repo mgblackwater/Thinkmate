@@ -17,16 +17,6 @@ Thinkmate coaches the thinking behind your words, not just grammar. Works on Wha
 5. Click **Load unpacked** and select the unzipped folder
 6. Open Thinkmate settings — configure an AI provider (Gemini recommended — free)
 
-### Firefox
-
-1. Download [`thinkmate-firefox.zip`](dist/thinkmate-firefox.zip)
-2. Open `about:debugging#/runtime/this-firefox`
-3. Click **Load Temporary Add-on**
-4. Select the downloaded zip file (no need to unzip)
-5. Open Thinkmate settings — configure an AI provider (Gemini recommended — free)
-
-> **Note:** Temporary add-ons are removed when Firefox restarts. For permanent install, the extension needs to be signed via [addons.mozilla.org](https://addons.mozilla.org).
-
 ## Features
 
 ### Coaching
@@ -67,7 +57,6 @@ All off by default. Enable in settings:
 - **Personalization** — provide your profile (name, goals, native language) to tailor coaching
 - **Memory** — learns your recurring mistakes and tracks progress
   - Local storage with 90-day rolling window
-  - Optional cloud sync via your own Supabase project
 - **Insights** — view your weak areas, strong areas, coach usage, and site usage
 
 ### Privacy
@@ -90,7 +79,7 @@ Quick Correct coach is configurable in Settings → Preferences.
 ## Tech Stack
 
 - Vanilla JS — no frameworks, no build step
-- Chrome & Firefox Extension Manifest V3
+- Chrome Extension Manifest V3
 - Shadow DOM for CSS isolation
 - `chrome.storage.sync` for settings (cross-device)
 - `chrome.storage.local` for memory data
@@ -100,9 +89,7 @@ Quick Correct coach is configurable in Settings → Preferences.
 
 ```
 thinkmate/
-  manifest.chrome.json   — Chrome-specific manifest (service_worker)
-  manifest.firefox.json  — Firefox-specific manifest (scripts)
-  build.sh               — builds both Chrome and Firefox zips into dist/
+  manifest.json          — Chrome Manifest V3
   background.js          — service worker: API routing, shortcuts, context menu
   content.js             — content script: detector, panel, selection trigger
   panel.css              — panel styles (injected in Shadow DOM)
@@ -119,7 +106,6 @@ thinkmate/
     detector.js          — input field detection + text apply
     storage.js           — chrome.storage wrapper
     memory.js            — personalization + auto-learning
-    sync.js              — Supabase cloud sync
   /icons
     icon16/48/128.png
 ```
